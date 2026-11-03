@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import GeoLocation, LocationImage
+from .models import GeoLocation, LocationImage, GameSession, GameRound
 
 
 @admin.register(GeoLocation)
