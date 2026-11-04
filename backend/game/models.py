@@ -101,3 +101,4 @@ class GameRound(models.Model):
 
     def __str__(self):
         return f"Partida {self.session_id} — Ronda {self.round_number}"
+
