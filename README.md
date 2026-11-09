@@ -82,6 +82,16 @@ Resposta:
     ]
 }`
 
+
+### GET  http://127.0.0.1:8000/api/account/profile/
+{
+	"username": "jogador1",
+	"email": "",
+	"avatar": null,
+	"bio": "",
+	"created_at": "2026-11-09T14:49:30.006020Z"
+}
+
 ## DEFAULT ENV
 
 export DB_PASSWORD='A_TUA_PASSWORD'
