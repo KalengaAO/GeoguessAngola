@@ -10,7 +10,7 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("game.urls")),
-    path("api/account/", include("accounts.urls")),
+    path("api/", include("accounts.urls")),
     path(
         "api/token/",
         TokenObtainPairView.as_view(),
