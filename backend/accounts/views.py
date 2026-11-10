@@ -55,4 +55,15 @@ class ProfileView(APIView):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    def update(self, instance, validated_data):
+    user_data = validated_data.pop("user", {})
 
+    if user_data:
+        user = instance.user
+
+        for attr, value in user_data.items():
+            setattr(user, attr, value)
+
+        user.save(update_fields=list(user_data.keys()))
+
+    return super().update(instance, validated_data)
