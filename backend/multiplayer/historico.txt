@@ -1,0 +1,5 @@
+GameRoom	Sala, código de acesso e anfitrião
+RoomParticipant	Jogadores inscritos na sala
+MultiplayerMatch	Partida coletiva
+MultiplayerRound	Ronda e imagem partilhada
+MultiplayerGuess	Resposta e pontuação individual
