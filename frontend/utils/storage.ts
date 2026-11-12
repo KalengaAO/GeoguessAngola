@@ -1,6 +1,6 @@
 export const STORAGE_KEYS = {
   TOKEN: "token",
-  EXPIRES_IN: "expires_in",
+  REFRESH_TOKEN: "refresh_token",
   USER: "user",
 } as const
 
