@@ -15,12 +15,8 @@ export type ExampleRegisterRequest = {
 }
 
 export type ExampleLoginResponse = {
-  data: {
-    access_token: string
-    refresh_token?: string
-    user: ExampleAuthUser
-  }
-  message?: string
+    access: string
+    refresh: string
 }
 
 export type ExampleRegisterResponse = {
@@ -32,6 +28,6 @@ export type AuthContextValue = {
   isLoading: boolean
   isAuthenticated: boolean
   // eslint-disable-next-line no-unused-vars -- Parameter types are part of this public context API.
-  setSession: (session: { token: string; refresh: string; user: ExampleAuthUser }) => void
+  setSession: (session: { token: string; refresh: string; user: ExampleAuthUser | null}) => void
   logout: () => void
 }
