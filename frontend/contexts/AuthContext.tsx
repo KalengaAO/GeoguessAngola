@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const setSession = useCallback(
-    ({ token, refresh, user }: { token: string; refresh: string; user: ExampleAuthUser }) => {
+    ({ token, refresh, user }: { token: string; refresh: string; user: ExampleAuthUser | null}) => {
       storageSet(STORAGE_KEYS.TOKEN, token)
       storageSet(STORAGE_KEYS.REFRESH_TOKEN, refresh)
       storageSet(STORAGE_KEYS.USER, user)
