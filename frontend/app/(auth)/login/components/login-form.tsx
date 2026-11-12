@@ -42,7 +42,7 @@ export function LoginForm() {
             aria-invalid={Boolean(emailError)}
             placeholder="nome@escola.ao"
             type="email"
-            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-sky-500"
+            className="h-12 rounded-xl border-stone-200 bg-white pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-amber-500"
           />
         </div>
         {emailError && (
@@ -68,7 +68,7 @@ export function LoginForm() {
             aria-invalid={Boolean(passwordError)}
             placeholder="Introduza a sua palavra-passe"
             type={showPassword ? "text" : "password"}
-            className="h-12 rounded-xl border-slate-200 bg-slate-50 pr-11 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-sky-500"
+            className="h-12 rounded-xl border-stone-200 bg-white pr-11 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-amber-500"
           />
           <button
             type="button"
@@ -97,18 +97,10 @@ export function LoginForm() {
       </label>
 
       <div className="flex items-center justify-between gap-3 text-xs text-slate-500">
-        <label className="inline-flex items-center gap-2">
-          <input
-            {...form.register("remember")}
-            className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-            type="checkbox"
-          />
-          <span>Manter sessão iniciada</span>
-        </label>
 
         <Link
           href="/repor-palavra-passe"
-          className="font-medium text-sky-600 transition hover:text-sky-700"
+          className="font-medium text-red-800 transition hover:text-red-950"
         >
           Esqueceu a palavra-passe?
         </Link>
@@ -117,7 +109,7 @@ export function LoginForm() {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="h-12 w-full rounded-xl bg-sky-600 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(14,116,144,0.18)] hover:bg-sky-700"
+        className="h-12 w-full rounded-xl bg-red-800 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(127,29,29,0.24)] hover:bg-red-950"
       >
         {isSubmitting && (
           <>

@@ -17,6 +17,7 @@ import {
   storageRemove,
   storageSet,
 } from "@/utils/storage"
+import { logoutService } from "@/services/auth"
 
 type SessionSnapshot = {
   user: ExampleAuthUser | null
@@ -73,9 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const setSession = useCallback(
-    ({ token, user }: { token: string; user: ExampleAuthUser }) => {
+    ({ token, refresh, user }: { token: string; refresh: string; user: ExampleAuthUser }) => {
       storageSet(STORAGE_KEYS.TOKEN, token)
-      storageRemove(STORAGE_KEYS.EXPIRES_IN)
+      storageSet(STORAGE_KEYS.REFRESH_TOKEN, refresh)
       storageSet(STORAGE_KEYS.USER, user)
       sessionSnapshot = { user, isLoading: false }
       initialized = true
@@ -84,13 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async() => {
     storageRemove(STORAGE_KEYS.TOKEN)
-    storageRemove(STORAGE_KEYS.EXPIRES_IN)
+    storageRemove(STORAGE_KEYS.REFRESH_TOKEN)
     storageRemove(STORAGE_KEYS.USER)
     sessionSnapshot = { user: null, isLoading: false }
     initialized = true
     emitChange()
+    await logoutService()
     router.replace("/entrar")
   }, [router])
 
