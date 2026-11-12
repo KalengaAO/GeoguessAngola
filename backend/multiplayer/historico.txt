@@ -6,19 +6,15 @@ MultiplayerGuess	Resposta e pontuação individual
 
 
 models.py: estrutura e relações da base de dados — já concluído.
-
-
-
 services.py: regras de negócio, transações e operações sobre os modelos.
-
-
-
 serializers.py: validação e transformação dos dados recebidos e enviados pela API.
-
-
-
 views.py: endpoints HTTP, autenticação, permissões e respostas.
-
-
-
 urls.py: rotas da API.
+
+
+Submissão de palpites: cada jogador envia as suas coordenadas para a imagem da ronda.
+Conclusão da ronda: verificar quando todos os participantes activos submeteram os seus palpites.
+Avanço de ronda: disponibilizar uma nova imagem partilhada por todos.
+Conclusão da partida: terminar depois das cinco rondas.
+Resultados e classificação: calcular os pontos individuais e ordenar os jogadores.
+
