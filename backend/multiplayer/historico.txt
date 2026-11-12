@@ -3,3 +3,22 @@ RoomParticipant	Jogadores inscritos na sala
 MultiplayerMatch	Partida coletiva
 MultiplayerRound	Ronda e imagem partilhada
 MultiplayerGuess	Resposta e pontuação individual
+
+
+models.py: estrutura e relações da base de dados — já concluído.
+
+
+
+services.py: regras de negócio, transações e operações sobre os modelos.
+
+
+
+serializers.py: validação e transformação dos dados recebidos e enviados pela API.
+
+
+
+views.py: endpoints HTTP, autenticação, permissões e respostas.
+
+
+
+urls.py: rotas da API.
