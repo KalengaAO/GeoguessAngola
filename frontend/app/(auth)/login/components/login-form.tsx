@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, User } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
@@ -9,49 +9,59 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useAppForm } from "@/hooks"
 import { type SignInFormData, signInSchema } from "@/schemas"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
+import { useMutation } from "@tanstack/react-query"
+import { loginService } from "@/services/auth"
 
 export function LoginForm() {
+  //
+  const router  = useRouter()
+  const {setSession} = useAuth()
+  const loginMutation = useMutation({mutationFn: loginService})
+  //
   const [showPassword, setShowPassword] = useState(false)
   const { form, handleSubmit, fieldError, isSubmitting } =
     useAppForm<SignInFormData>({
       schema: signInSchema,
-      defaultValues: {
-        email: "",
-        password: "",
-        remember: false,
+      defaultValues: { username: "", password: ""},
+      onSubmit: async ({username, password}) => {
+        const result = await loginMutation.mutateAsync({username,password})
+        const {access, refresh} = result
+        setSession({token: access, refresh: refresh, user: null} )
+        router.replace("/")
       },
-      onSubmit: () => undefined,
       successMessage:
         "Credenciais recebidas. A autenticação está pronta para ser ligada ao servidor.",
     })
 
-  const emailError = fieldError("email")
+  const userError = fieldError("username")
   const passwordError = fieldError("password")
 
   return (
     <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
       <label className="block text-sm font-medium text-slate-700">
-        Email
+        username
         <div className="relative mt-2">
-          <Mail className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <User className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            {...form.register("email")}
+            {...form.register("username")}
             required
-            autoComplete="email"
-            aria-describedby={emailError ? "email-error" : undefined}
-            aria-invalid={Boolean(emailError)}
-            placeholder="nome@escola.ao"
-            type="email"
+            autoComplete="username"
+            aria-describedby={userError ? "email-error" : undefined}
+            aria-invalid={Boolean(userError)}
+            placeholder="akalenga"
+            type="text"
             className="h-12 rounded-xl border-stone-200 bg-white pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-amber-500"
           />
         </div>
-        {emailError && (
+        {userError && (
           <p
             id="email-error"
             className="mt-1 text-xs text-red-600"
             role="alert"
           >
-            {emailError}
+            {userError}
           </p>
         )}
       </label>
