@@ -8,24 +8,34 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useAppForm } from "@/hooks"
-import { type SignInFormData, signInSchema } from "@/schemas"
+import { type SignUpFormData, signInSchema } from "@/schemas"
+import { useRouter } from "next/navigation"
+import { useMutation } from "@tanstack/react-query"
+import { registerService } from "@/services/auth"
+import { toast } from "sonner"
 
 export function RegisterForm() {
+  //
+  const router = useRouter()
+  const registerMutation = useMutation({mutationFn: registerService})
+  //
   const [showPassword, setShowPassword] = useState(false)
   const { form, handleSubmit, fieldError, isSubmitting } =
-    useAppForm<SignInFormData>({
+    useAppForm<SignUpFormData>({
       schema: signInSchema,
       defaultValues: {
-        email: "",
+        username: "",
         password: "",
-        remember: false,
       },
-      onSubmit: () => undefined,
-      successMessage:
-        "Credenciais recebidas. A autenticação está pronta para ser ligada ao servidor.",
+      onSubmit: async({username, password}) => {
+        const result = await registerMutation.mutateAsync({username,password})
+        const {detail} = result;
+        toast.success(detail);
+        router.replace("/")
+      },
     })
 
-  const emailError = fieldError("email")
+  const userError = fieldError("username")
   const passwordError = fieldError("password")
 
   return (
@@ -35,23 +45,23 @@ export function RegisterForm() {
         <div className="relative mt-2">
           <Mail className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            {...form.register("email")}
+            {...form.register("username")}
             required
             autoComplete="email"
-            aria-describedby={emailError ? "email-error" : undefined}
-            aria-invalid={Boolean(emailError)}
+            aria-describedby={userError ? "userError-error" : undefined}
+            aria-invalid={Boolean(userError)}
             placeholder="nome@escola.ao"
             type="email"
             className="h-12 rounded-xl border-stone-200 bg-white pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-amber-500"
           />
         </div>
-        {emailError && (
+        {userError && (
           <p
             id="email-error"
             className="mt-1 text-xs text-red-600"
             role="alert"
           >
-            {emailError}
+            {userError}
           </p>
         )}
       </label>
