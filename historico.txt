@@ -50,3 +50,12 @@ Etapa	Funcionalidade
 4	    Jogo individual
 5	    Multiplayer
 6	    Ranking
+
+# Funcionalidade	Ciclo
+
+Register	API → formulário → validação → resposta → renderização
+Login	API → formulário → autenticação → tokens → sessão
+Logout	sessão → remoção de tokens → atualização do contexto
+Restauração	sessionStorage → validação → perfil → renderização
+Jogo	API → imagem → mapa → resposta → resultado
+Ranking	API → dados → componentes → renderização
