@@ -38,6 +38,8 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+# HEAD
+# 4b0e631 (adding CORS)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -46,11 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
     'rest_framework',
-=======
     'corsheaders',
->>>>>>> 4b0e631 (adding CORS)
     'game',
     'accounts',
     'multiplayer'
@@ -72,6 +71,7 @@ CORS_ALLOWED_ORIGINS = _env_list(
     "http://localhost:3000,http://localhost:5173,"
     "http://127.0.0.1:3000,http://127.0.0.1:5173",
 )
+
 CSRF_TRUSTED_ORIGINS = _env_list(
     "CSRF_TRUSTED_ORIGINS",
     ",".join(CORS_ALLOWED_ORIGINS),

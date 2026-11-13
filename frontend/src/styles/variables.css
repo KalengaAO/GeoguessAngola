@@ -1,0 +1,53 @@
+
+:root {
+    /* Cores principais */
+    --color-black: #080808;
+    --color-dark-red: #250609;
+    --color-crimson: #650D19;
+    --color-white: #FFFFFF;
+    --color-gold: #FFC629;
+
+    /* Fundos */
+    --background-main: var(--color-black);
+    --background-secondary: var(--color-dark-red);
+    --background-card: rgba(255, 255, 255, 0.04);
+
+    /* Texto */
+    --text-primary: var(--color-white);
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.45);
+
+    /* Interacções */
+    --interaction-color: var(--color-gold);
+
+    /* Tipografia */
+    --font-primary: "Inter", "Segoe UI", Arial, sans-serif;
+
+    --font-size-small: 0.875rem;
+    --font-size-normal: 1rem;
+    --font-size-medium: 1.25rem;
+    --font-size-large: 2rem;
+    --font-size-title: 3rem;
+
+    /* Espaçamentos */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+
+    /* Bordas */
+    --border-radius-sm: 6px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 20px;
+
+    --border-subtle: 1px solid rgba(255, 255, 255, 0.12);
+
+    /* Transições */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.35s ease;
+
+    /* Camadas */
+    --z-navbar: 100;
+    --z-overlay: 200;
+}
