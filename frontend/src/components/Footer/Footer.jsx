@@ -22,7 +22,13 @@ const culturalElements = [
         id: 4,
         name: "Pedras Negras de Pungo Andongo",
         image: "/images/cultural/pedras_negras_pungo_andongo.svg",
+    }, 
+    {
+        id: 5,
+        name: "Máscara chokwe",
+        image: "/images/cultural/mascara_chokwe.svg",
     },
+    
 ];
 
 function Footer() {
@@ -33,7 +39,7 @@ function Footer() {
 
                 <div className="footer__identity">
                     <Link to="/" className="footer__brand">
-                        GeoGuess <span>Angola</span>
+                        GeoGuess Angola
                     </Link>
 
                     <p>

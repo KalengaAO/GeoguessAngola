@@ -35,14 +35,13 @@ function Header() {
             <div className="header__overlay" />
 
             <div className="header__content">
-                <p className="header__eyebrow">
-                    EXPLORA ANGOLA
-                </p>
-
+           
                 <h1>
-                    Angola — Mais que um país,
-                    <span> uma experiência.</span>
+                    GeoGuess - Angola <br />
                 </h1>
+                    <p className="header__eyebrow">
+                    MAIS QUE UMA EXPERIÊNCIA!
+                    </p>
 
                 <p className="header__description">
                     Descobre os lugares, paisagens e maravilhas

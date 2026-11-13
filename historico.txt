@@ -35,3 +35,18 @@ npm audit
 
 mkdir -p src/config
 touch src/config/landscapes.js
+
+
+## ENV
+VITE_API_URL=http://127.0.0.1:8000/api
+
+
+## ORDEM DE INTREGRAÇÃO
+
+Etapa	Funcionalidade
+1	    Cliente HTTP — Axios
+2	    Registo e login — JWT
+3	    Perfil do utilizador
+4	    Jogo individual
+5	    Multiplayer
+6	    Ranking
