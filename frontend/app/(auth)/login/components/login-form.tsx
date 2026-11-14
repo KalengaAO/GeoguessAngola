@@ -39,7 +39,7 @@ export function LoginForm() {
   const passwordError = fieldError("password")
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
+    <form method="post" onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
       <label className="block text-sm font-medium text-slate-700">
         username
         <div className="relative mt-2">

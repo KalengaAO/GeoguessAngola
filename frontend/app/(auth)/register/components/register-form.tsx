@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useAppForm } from "@/hooks"
-import { type SignUpFormData, signInSchema } from "@/schemas"
+import { type SignUpFormData, signUpSchema } from "@/schemas"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
 import { registerService } from "@/services/auth"
@@ -22,7 +22,7 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const { form, handleSubmit, fieldError, isSubmitting } =
     useAppForm<SignUpFormData>({
-      schema: signInSchema,
+      schema: signUpSchema,
       defaultValues: {
         username: "",
         password: "",
@@ -39,7 +39,12 @@ export function RegisterForm() {
   const passwordError = fieldError("password")
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
+    <form
+      method="post"
+      onSubmit={handleSubmit}
+      noValidate
+      className="mt-8 space-y-5"
+    >
       <label className="block text-sm font-medium text-slate-700">
         Email
         <div className="relative mt-2">
