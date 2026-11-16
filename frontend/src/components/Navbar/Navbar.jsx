@@ -11,19 +11,7 @@ function Navbar() {
                     GeoGuess <span>Angola</span>
                 </NavLink>
 
-                <div className="navbar__links">
-                    <NavLink to="/" end>
-                        Início
-                    </NavLink>
 
-                    <NavLink to="/game">
-                        Jogo
-                    </NavLink>
-
-                    <NavLink to="/multiplayer">
-                        Multiplayer
-                    </NavLink>
-                </div>
 
                 <div className="navbar__actions">
                     <NavLink
