@@ -35,7 +35,7 @@ const culturalElements = [
     },
     {
         id: 7,
-        name: "Mascara madeira",
+        name: "Máscara chokwe",
         image: "/images/cultural/mascara_madeira.svg",
     },
     {
@@ -64,11 +64,15 @@ function Footer() {
                 </div>
 
                 <div className="footer__navigation">
-                    <h3>Navegação</h3>
+                    <h3>Sobre</h3>
 
-                    <Link to="/">Início</Link>
-                    <Link to="/game">Jogo</Link>
-                    <Link to="/multiplayer">Multiplayer</Link>
+                    <p className="footer__about">O nosso projeto 
+                        consiste no desenvolvimento 
+                        de uma plataforma interativa 
+                        que combina exploração geográfica e 
+                        conhecimento cultural, inspirada no 
+                        conceito do GeoGuessr, mas com um foco 
+                        especial em Angola.</p>
                 </div>
 
                 <div className="footer__about">
