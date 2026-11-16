@@ -77,7 +77,7 @@
 }
 
 .register__field input:focus {
-    border-color: #FFC629;
+    border-color: var(--color-crimson);
 }
 
 .register__field-error {
