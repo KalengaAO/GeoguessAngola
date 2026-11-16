@@ -19,18 +19,7 @@
     width: 100%;
     max-width: 440px;
     padding: 42px;
-
-    background: linear-gradient(
-        145deg,
-        #171010,
-        #080808 75%
-    );
-
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: 3px solid #650D19;
     border-radius: 10px;
-
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
 .login__header {
@@ -39,7 +28,7 @@
 }
 
 .login__eyebrow {
-    color: #FFC629;
+    color: #FFFFFF;
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 3px;
@@ -72,7 +61,6 @@
 .login__field input {
     width: 100%;
     padding: 14px 15px;
-
     color: #FFFFFF;
     background: #111111;
 
@@ -89,7 +77,7 @@
 }
 
 .login__field input:focus {
-    border-color: #FFC629;
+    border-color: var(--color-crimson);
 }
 
 .login button {

@@ -19,8 +19,7 @@ function App() {
 
     return (
         <>
-
-            <main>
+            <main style={{scrollBehavior: "smooth"}}>
                 <Routes>
                     <Route
                         path="/"
