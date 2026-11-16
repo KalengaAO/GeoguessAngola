@@ -1,8 +1,10 @@
 
 import api from "./api";
-
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
+import {
+    clearAuthTokens,
+    getAccessToken,
+    setAuthTokens,
+} from "../utils/storage";
 
 // Registo de utilizador
 export async function registerUser(userData) {
@@ -16,8 +18,7 @@ export async function loginUser(credentials) {
 
     const { access, refresh } = response.data;
 
-    sessionStorage.setItem(ACCESS_TOKEN_KEY, access);
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+    setAuthTokens({ access, refresh });
 
     return response.data;
 }
@@ -40,11 +41,8 @@ export async function updateCurrentUser(profileData) {
 
 // Encerrar sessão local
 export function logoutUser() {
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    clearAuthTokens();
 }
 
 // Obter access token
-export function getAccessToken() {
-    return sessionStorage.getItem(ACCESS_TOKEN_KEY);
-}
+export { getAccessToken };

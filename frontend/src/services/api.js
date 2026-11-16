@@ -1,5 +1,13 @@
 
 import axios from "axios";
+import {
+    clearAuthTokens,
+    getAccessToken,
+    getRefreshToken,
+    notifyAuthSessionExpired,
+    setAccessToken,
+    setRefreshToken,
+} from "../utils/storage";
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -23,7 +31,7 @@ let refreshPromise = null;
 // INTERCEPTOR DE PEDIDOS
 api.interceptors.request.use(
     (config) => {
-        const accessToken = sessionStorage.getItem("access_token");
+        const accessToken = getAccessToken();
 
         if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;
@@ -56,11 +64,11 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        const refreshToken = sessionStorage.getItem("refresh_token");
+        const refreshToken = getRefreshToken();
 
         if (!refreshToken) {
-            sessionStorage.removeItem("access_token");
-            sessionStorage.removeItem("refresh_token");
+            clearAuthTokens();
+            notifyAuthSessionExpired();
 
             return Promise.reject(error);
         }
@@ -77,12 +85,12 @@ api.interceptors.response.use(
                     .then((response) => {
                         const { access, refresh } = response.data;
 
-                        sessionStorage.setItem("access_token", access);
+                        setAccessToken(access);
 
                         // Só existe se a rotação de refresh tokens
                         // estiver configurada no backend.
                         if (refresh) {
-                            sessionStorage.setItem("refresh_token", refresh);
+                            setRefreshToken(refresh);
                         }
 
                         return access;
@@ -101,8 +109,8 @@ api.interceptors.response.use(
             return api(originalRequest);
 
         } catch (refreshError) {
-            sessionStorage.removeItem("access_token");
-            sessionStorage.removeItem("refresh_token");
+            clearAuthTokens();
+            notifyAuthSessionExpired();
 
             return Promise.reject(refreshError);
         }
