@@ -1,0 +1,26 @@
+.home-page__auth {
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    opacity: 0;
+    scroll-margin-top: 1.5rem;
+    transition:
+        grid-template-rows 450ms ease,
+        opacity 250ms ease;
+}
+
+.home-page__auth[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.home-page__auth-content {
+    min-height: 0;
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-page__auth {
+        transition: none;
+    }
+}

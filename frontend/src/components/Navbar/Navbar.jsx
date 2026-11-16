@@ -1,34 +1,36 @@
 
-import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./Navbar.css";
 
-function Navbar() {
+function Navbar({ activeAuthPanel, onToggleAuth }) {
     return (
         <nav className="navbar">
             <div className="navbar__container">
 
-                <NavLink to="/" className="navbar__brand">
+                <Link to="/" className="navbar__brand">
                     GeoGuess <span>Angola</span>
-                </NavLink>
-
-
+                </Link>
 
                 <div className="navbar__actions">
-                    <NavLink
-                        to="/login"
+                    <button
+                        type="button"
                         className="navbar__login"
+                        aria-controls="auth-panel"
+                        aria-expanded={activeAuthPanel === "login"}
+                        onClick={() => onToggleAuth("login")}
                     >
                         Entrar
-                    </NavLink>
-
-                    <NavLink
-                        to="/register"
+                    </button>
+                    <button
+                        type="button"
                         className="navbar__register"
+                        aria-controls="auth-panel"
+                        aria-expanded={activeAuthPanel === "register"}
+                        onClick={() => onToggleAuth("register")}
                     >
                         Criar conta
-                    </NavLink>
+                    </button>
                 </div>
-
             </div>
         </nav>
     );

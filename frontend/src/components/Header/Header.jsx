@@ -4,7 +4,7 @@ import Navbar from "../Navbar/Navbar";
 import landscapes from "../../config/landscapes";
 import "./Header.css";
 
-function Header() {
+function Header({ activeAuthPanel, onToggleAuth }) {
     const [activeIndex, setActiveIndex] = useState(0);
 
     useEffect(() => {
@@ -22,7 +22,10 @@ function Header() {
     return (
         <header className="header">
 
-            <Navbar />
+            <Navbar
+                activeAuthPanel={activeAuthPanel}
+                onToggleAuth={onToggleAuth}
+            />
 
             <div
                 className="header__background"

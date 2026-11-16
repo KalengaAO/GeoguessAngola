@@ -1,4 +1,3 @@
-
 .login-page {
     min-height: 70vh;
     display: flex;
@@ -80,6 +79,11 @@
     border-color: var(--color-crimson);
 }
 
+.login__field-error {
+    color: #ef3e3e;
+    font-size: 0.8rem;
+}
+
 .login button {
     width: 100%;
     padding: 15px;
@@ -109,21 +113,6 @@
 .login button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-}
-
-.login__success {
-    margin-top: 20px;
-    color: #7ED6A3;
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.login__error {
-    margin-top: 20px;
-    color: #ef3e3e;
-    text-align: center;
-    font-size: 0.9rem;
-    overflow-wrap: anywhere;
 }
 
 @media (max-width: 480px) {

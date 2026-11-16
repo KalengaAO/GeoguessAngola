@@ -228,22 +228,6 @@
     background: #250609;
 }
 
-.profile__error,
-.profile__success {
-    margin-bottom: 18px;
-    text-align: center;
-    font-size: 0.9rem;
-    overflow-wrap: anywhere;
-}
-
-.profile__error {
-    color: #ef3e3e;
-}
-
-.profile__success {
-    color: #7ED6A3;
-}
-
 @media (max-width: 480px) {
     .profile {
         padding: 30px 22px;

@@ -28,7 +28,8 @@
 }
 
 .navbar__links a,
-.navbar__actions a {
+.navbar__actions a,
+.navbar__actions button {
     color: var(--color-white);
     font-size: var(--font-size-small);
     font-weight: 500;
@@ -37,6 +38,7 @@
 
 .navbar__links a:hover,
 .navbar__actions a:hover,
+.navbar__actions button:hover,
 .navbar__links a.active {
     color: var(--interaction-color);
 }
@@ -46,6 +48,8 @@
     padding: 0.7rem 1.2rem;
     border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: var(--border-radius-sm);
+    background: transparent;
+    cursor: pointer;
 }
 
 .navbar__actions .navbar__register:hover {

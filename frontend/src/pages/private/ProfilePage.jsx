@@ -1,10 +1,11 @@
-
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
-import "./Profile.css";
+import { toast } from "sonner";
+import { useAuth } from "../../hooks/useAuth";
+import { getApiErrorMessage } from "../../utils/apiErrors";
+import "../../components/Profile/Profile.css";
 
-function Profile() {
+function ProfilePage() {
     const navigate = useNavigate();
     const { user, updateProfile, logout } = useAuth();
     const [formData, setFormData] = useState({
@@ -14,8 +15,6 @@ function Profile() {
 
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
 
     function handleChange(event) {
         const { name, value } = event.target;
@@ -25,8 +24,6 @@ function Profile() {
             [name]: value,
         }));
 
-        setError("");
-        setSuccess("");
     }
 
     function handleLogout() {
@@ -38,22 +35,17 @@ function Profile() {
         event.preventDefault();
 
         setIsLoading(true);
-        setError("");
-        setSuccess("");
-
         try {
             await updateProfile(formData);
-
-            setSuccess("Perfil atualizado com sucesso.");
+            toast.success("Perfil atualizado com sucesso.");
             setIsEditing(false);
-        } catch (error) {
-            const responseData = error.response?.data;
-
-            const messages = responseData
-                ? Object.values(responseData).flat().join(" ")
-                : "Não foi possível atualizar o perfil.";
-
-            setError(messages);
+        } catch (requestError) {
+            toast.error(
+                getApiErrorMessage(
+                    requestError,
+                    "Não foi possível atualizar o perfil."
+                )
+            );
         } finally {
             setIsLoading(false);
         }
@@ -65,29 +57,16 @@ function Profile() {
             bio: user?.bio || "",
         });
 
-        setError("");
-        setSuccess("");
         setIsEditing(false);
     }
-
-    const createdAt = user?.created_at
-        ? new Date(user.created_at).toLocaleDateString("pt-PT")
-        : "Não disponível";
 
     return (
         <section className="profile-page">
             <div className="profile">
-
                 <header className="profile__header">
-                    <span className="profile__eyebrow">
-                        GEOGUESS ANGOLA
-                    </span>
-
+                    <span className="profile__eyebrow">GEOGUESS ANGOLA</span>
                     <h1>O teu perfil</h1>
-
-                    <p>
-                        Gere as tuas informações de jogador.
-                    </p>
+                    <p>Gere as tuas informações de jogador.</p>
                 </header>
 
                 <div className="profile__identity">
@@ -111,12 +90,8 @@ function Profile() {
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                   
                     <div className="profile__field">
-                        <label htmlFor="profile-email">
-                            Email
-                        </label>
-
+                        <label htmlFor="profile-email">Email</label>
                         <input
                             id="profile-email"
                             type="email"
@@ -128,10 +103,7 @@ function Profile() {
                     </div>
 
                     <div className="profile__field">
-                        <label htmlFor="profile-bio">
-                            Biografia
-                        </label>
-
+                        <label htmlFor="profile-bio">Biografia</label>
                         <textarea
                             id="profile-bio"
                             name="bio"
@@ -143,18 +115,6 @@ function Profile() {
                         />
                     </div>
 
-                    {error && (
-                        <p className="profile__error" role="alert">
-                            {error}
-                        </p>
-                    )}
-
-                    {success && (
-                        <p className="profile__success" role="status">
-                            {success}
-                        </p>
-                    )}
-
                     {!isEditing ? (
                         <button
                             type="button"
@@ -164,15 +124,11 @@ function Profile() {
                         </button>
                     ) : (
                         <div className="profile__actions">
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                            >
+                            <button type="submit" disabled={isLoading}>
                                 {isLoading
                                     ? "A guardar..."
                                     : "Guardar alterações"}
                             </button>
-
                             <button
                                 type="button"
                                 className="profile__cancel"
@@ -192,10 +148,9 @@ function Profile() {
                 >
                     Terminar sessão
                 </button>
-
             </div>
         </section>
     );
 }
 
-export default Profile;
+export default ProfilePage;

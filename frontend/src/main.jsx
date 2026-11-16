@@ -1,18 +1,24 @@
-import React from "react";
+import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from "./context/AuthContext";
-import App from './App.jsx'
-import './styles/global.css'
+import { QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AuthProvider } from "./contexts/AuthProvider";
+import App from "./App.jsx";
+import queryClient from "./query/queryClient";
+import "./styles/global.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-    <React.StrictMode>
-        <BrowserRouter>
-            <AuthProvider>
-                <App />
-            </AuthProvider>
-        </BrowserRouter>
-    </React.StrictMode>
+    <StrictMode>
+        <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
+            </BrowserRouter>
+            <Toaster position="top-right" richColors />
+        </QueryClientProvider>
+    </StrictMode>
 );
 
 
