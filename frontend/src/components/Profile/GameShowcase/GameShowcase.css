@@ -1,0 +1,177 @@
+.game-showcase {
+    position: relative;
+    isolation: isolate;
+    min-height: 480px;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    background: var(--color-black);
+}
+
+/* Imagens */
+.game-showcase__images {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+}
+
+.game-showcase__image {
+    position: absolute;
+    inset: 0;
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    opacity: 0;
+    transform: scale(1.04);
+
+    transition:
+        opacity 1.5s ease-in-out,
+        transform 6s ease;
+
+}
+
+.game-showcase__image.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Sobreposição para melhorar a leitura */
+.game-showcase__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(8, 8, 8, 0.95) 0%,
+            rgba(37, 6, 9, 0.75) 48%,
+            rgba(8, 8, 8, 0.2) 100%
+        );
+}
+
+/* Conteúdo */
+.game-showcase__content {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+
+    min-height: 680px;
+    max-width: 550px;
+    padding: 3.5rem;
+}
+
+.game-showcase__eyebrow {
+    margin-bottom: 1.2rem;
+
+    color: var(--color-gold);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+.game-showcase__content h1 {
+    margin: 0;
+
+    color: var(--color-white);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.12;
+}
+
+.game-showcase__content p {
+    max-width: 480px;
+    margin: 1.5rem 0 2rem;
+
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+/* Botão */
+.game-showcase__button {
+    padding: 14px 26px;
+
+    color: var(--color-white);
+    background: var(--color-crimson);
+
+    border: 1px solid var(--color-crimson);
+    border-radius: 6px;
+
+    font-size: 0.95rem;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease,
+        transform 0.3s ease;
+}
+
+.game-showcase__button:hover {
+    background: var(--color-dark-red);
+    border-color: var(--color-gold);
+    transform: translateY(-2px);
+}
+
+/* Indicadores */
+.game-showcase__indicators {
+    position: absolute;
+    right: 3rem;
+    bottom: 2rem;
+
+    display: flex;
+    gap: 8px;
+
+    z-index: 2;
+}
+
+.game-showcase__indicators span {
+    width: 25px;
+    height: 4px;
+
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.35);
+
+    transition:
+        background 0.4s ease,
+        width 0.4s ease;
+}
+
+.game-showcase__indicators span.active {
+    width: 42px;
+    background: var(--color-gold);
+}
+
+/* Responsividade */
+@media (max-width: 760px) {
+    .game-showcase,
+    .game-showcase__content {
+        min-height: 420px;
+    }
+
+    .game-showcase__content {
+        padding: 2rem;
+    }
+
+    .game-showcase__indicators {
+        right: 2rem;
+        bottom: 1.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .game-showcase__image,
+    .game-showcase__indicators span,
+    .game-showcase__button {
+        transition: none;
+    }
+}

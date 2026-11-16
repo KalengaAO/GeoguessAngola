@@ -1,5 +1,7 @@
 
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+
 import "./Footer.css";
 
 const culturalElements = [
@@ -22,10 +24,10 @@ const culturalElements = [
         id: 4,
         name: "Pedras Negras de Pungo Andongo",
         image: "/images/cultural/pedras_negras_pungo_andongo.png",
-    }, 
+    },
     {
         id: 5,
-        name: "Máscara chokwe",
+        name: "Máscara Chokwe",
         image: "/images/cultural/mascara_chokwe.svg",
     },
     {
@@ -35,56 +37,58 @@ const culturalElements = [
     },
     {
         id: 7,
-        name: "Máscara chokwe",
+        name: "Máscara de madeira",
         image: "/images/cultural/mascara_madeira.svg",
     },
     {
-        id: 7,
-        name: "Serra da leba estrada",
+        id: 8,
+        name: "Serra da Leba",
         image: "/images/cultural/serra_da_leba_estrada.svg",
     },
-    
 ];
 
 function Footer() {
+    const { isAuthenticated } = useAuth();
+
     return (
         <footer className="footer">
 
             <div className="footer__main">
+                {!isAuthenticated && (
+                    <>
+                        <div className="footer__identity">
+                            <Link to="/" className="footer__brand">
+                                GeoGuess Angola
+                            </Link>
 
-                <div className="footer__identity">
-                    <Link to="/" className="footer__brand">
-                        GeoGuess Angola
-                    </Link>
+                            <p>
+                                Descobre Angola, explora as suas paisagens
+                                e testa os teus conhecimentos geográficos.
+                            </p>
+                        </div>
 
-                    <p>
-                        Descobre Angola, explora as suas paisagens
-                        e testa os teus conhecimentos geográficos.
-                    </p>
-                </div>
+                        <div className="footer__about">
+                            <h3>Sobre</h3>
 
-                <div className="footer__about">
-                    <h3>Sobre</h3>
+                            <p>
+                                O nosso projeto consiste no desenvolvimento
+                                de uma plataforma interativa que combina
+                                exploração geográfica e conhecimento cultural,
+                                inspirada no conceito do GeoGuessr, mas com
+                                um foco especial em Angola.
+                            </p>
+                        </div>
 
-                    <p>O nosso projeto 
-                        consiste no desenvolvimento 
-                        de uma plataforma interativa 
-                        que combina exploração geográfica e 
-                        conhecimento cultural, inspirada no 
-                        conceito do GeoGuessr, mas com um foco 
-                        especial em Angola.
-                    </p>
-                </div>
+                        <div className="footer__about">
+                            <h3>O projeto</h3>
 
-                <div className="footer__about">
-                    <h3>O projeto</h3>
-
-                    <p>
-                        Uma experiência de exploração,
-                        aprendizagem e descoberta de Angola.
-                    </p>
-                </div>
-
+                            <p>
+                                Uma experiência de exploração,
+                                aprendizagem e descoberta de Angola.
+                            </p>
+                        </div>
+                    </>
+                )}
             </div>
 
             <div className="footer__culture">
@@ -99,6 +103,7 @@ function Footer() {
                                     src={element.image}
                                     alt={element.name}
                                 />
+
                                 <span>{element.name}</span>
                             </div>
                         )
