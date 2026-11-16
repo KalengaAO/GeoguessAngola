@@ -21,12 +21,27 @@ const culturalElements = [
     {
         id: 4,
         name: "Pedras Negras de Pungo Andongo",
-        image: "/images/cultural/pedras_negras_pungo_andongo.svg",
+        image: "/images/cultural/pedras_negras_pungo_andongo.png",
     }, 
     {
         id: 5,
         name: "Máscara chokwe",
         image: "/images/cultural/mascara_chokwe.svg",
+    },
+    {
+        id: 6,
+        name: "Luanda",
+        image: "/images/cultural/Luanda.png",
+    },
+    {
+        id: 7,
+        name: "Mascara madeira",
+        image: "/images/cultural/mascara_madeira.svg",
+    },
+    {
+        id: 7,
+        name: "Serra da leba estrada",
+        image: "/images/cultural/serra_da_leba_estrada.svg",
     },
     
 ];
