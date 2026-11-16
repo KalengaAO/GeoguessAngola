@@ -4,6 +4,8 @@ from .models import GameSession, GameRound, LocationImage
 from django.utils import timezone
 from .models import GameSession, GameRound, LocationImage
 from django.conf import settings
+from django.db.models import Sum
+from .models import PlayerStats
 
 def get_playable_images():
     return LocationImage.objects.filter(
@@ -129,6 +131,7 @@ def advance_game(session_id, user):
         session.status = GameSession.Status.COMPLETED
         session.finished_at = timezone.now()
         session.save(update_fields=["status", "finished_at"])
+        update_player_stats(session)
         return session, None
 
     used_image_ids = session.rounds.values_list("image_id", flat=True)
@@ -152,3 +155,39 @@ def choose_random_image(exclude_ids=None):
         images = images.exclude(id__in=exclude_ids)
 
     return images.order_by("?").first()
+
+@transaction.atomic
+def update_player_stats(session):
+    result = session.rounds.aggregate(
+        total_score=Sum("score"),
+    )
+
+    session_score = result["total_score"] or 0
+
+    completed_rounds = session.rounds.filter(
+        answered_at__isnull=False,
+    ).count()
+
+    stats, _ = PlayerStats.objects.get_or_create(
+        user=session.user,
+    )
+
+    # Bloqueia o registo durante a atualização.
+    stats = PlayerStats.objects.select_for_update().get(
+        pk=stats.pk,
+    )
+
+    stats.total_score += session_score
+    stats.games_played += 1
+    stats.best_score = max(stats.best_score, session_score)
+    stats.completed_rounds += completed_rounds
+
+    stats.save(update_fields=[
+        "total_score",
+        "games_played",
+        "best_score",
+        "completed_rounds",
+        "updated_at",
+    ])
+
+    return stats

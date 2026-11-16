@@ -4,9 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import GameRound
-from .serializers import SubmitAnswerSerializer
+from .serializers import SubmitAnswerSerializer, PlayerStatsSerializer
 from .services import submit_round_answer, start_game, advance_game
-from .models import GameSession
+from .models import GameSession, PlayerStats
 from django.conf import settings
 from django.db.models import Sum, Count
 
@@ -197,3 +197,15 @@ class GameStatusView(APIView):
                 {"detail": "Partida não encontrada."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+class PlayerStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        stats, created = PlayerStats.objects.get_or_create(
+            user=request.user,
+        )
+
+        serializer = PlayerStatsSerializer(stats)
+
+        return Response(serializer.data)

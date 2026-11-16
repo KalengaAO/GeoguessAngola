@@ -102,4 +102,19 @@ class GameRound(models.Model):
     def __str__(self):
         return f"Partida {self.session_id} — Ronda {self.round_number}"
 
+class PlayerStats(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="game_stats",
+    )
 
+    total_score = models.PositiveIntegerField(default=0)
+    games_played = models.PositiveIntegerField(default=0)
+    best_score = models.PositiveIntegerField(default=0)
+    completed_rounds = models.PositiveIntegerField(default=0)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Estatísticas de {self.user.username}"
