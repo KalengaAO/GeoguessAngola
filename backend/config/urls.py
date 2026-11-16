@@ -12,6 +12,7 @@ urlpatterns = [
     path("api/game/", include("game.urls")),
     path("api/account/", include("accounts.urls")),
     path("api/multiplayer/", include("multiplayer.urls")),
+    path("api/quiz/", include("quiz.urls")),
     path(
         "api/token/",
         TokenObtainPairView.as_view(),

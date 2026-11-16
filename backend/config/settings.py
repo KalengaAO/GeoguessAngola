@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'game',
     'accounts',
-    'multiplayer'
+    'multiplayer',
+    'quiz',
 ]
 
 MIDDLEWARE = [
