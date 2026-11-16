@@ -63,16 +63,17 @@ function Footer() {
                     </p>
                 </div>
 
-                <div className="footer__navigation">
+                <div className="footer__about">
                     <h3>Sobre</h3>
 
-                    <p className="footer__about">O nosso projeto 
+                    <p>O nosso projeto 
                         consiste no desenvolvimento 
                         de uma plataforma interativa 
                         que combina exploração geográfica e 
                         conhecimento cultural, inspirada no 
                         conceito do GeoGuessr, mas com um foco 
-                        especial em Angola.</p>
+                        especial em Angola.
+                    </p>
                 </div>
 
                 <div className="footer__about">
