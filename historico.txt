@@ -1,0 +1,61 @@
+GameRoom	Sala, código de acesso e anfitrião
+RoomParticipant	Jogadores inscritos na sala
+MultiplayerMatch	Partida coletiva
+MultiplayerRound	Ronda e imagem partilhada
+MultiplayerGuess	Resposta e pontuação individual
+
+
+models.py: estrutura e relações da base de dados — já concluído.
+services.py: regras de negócio, transações e operações sobre os modelos.
+serializers.py: validação e transformação dos dados recebidos e enviados pela API.
+views.py: endpoints HTTP, autenticação, permissões e respostas.
+urls.py: rotas da API.
+
+
+Submissão de palpites: cada jogador envia as suas coordenadas para a imagem da ronda.
+Conclusão da ronda: verificar quando todos os participantes activos submeteram os seus palpites.
+Avanço de ronda: disponibilizar uma nova imagem partilhada por todos.
+Conclusão da partida: terminar depois das cinco rondas.
+Resultados e classificação: calcular os pontos individuais e ordenar os jogadores.
+
+
+## Depedências do front-end
+
+npm create vite@latest frontend -- --template react
+cd frontend
+npm install
+npm run dev
+mkdir -p public/images/{landscapes,cultural}
+mkdir -p src/{assets,components/{Header,Navbar,Footer,Buttons},layouts,pages/{Home,Login,Register,Game,Multiplayer},services,context,hooks,routes,styles}
+touch src/styles/variables.css
+touch src/styles/global.css
+npm install axios react-router-dom leaflet react-leaflet
+npm audit fix --force
+npm audit
+
+mkdir -p src/config
+touch src/config/landscapes.js
+
+
+## ENV
+VITE_API_URL=http://127.0.0.1:8000/api
+
+
+## ORDEM DE INTREGRAÇÃO
+
+Etapa	Funcionalidade
+1	    Cliente HTTP — Axios
+2	    Registo e login — JWT
+3	    Perfil do utilizador
+4	    Jogo individual
+5	    Multiplayer
+6	    Ranking
+
+# Funcionalidade	Ciclo
+
+Register	API → formulário → validação → resposta → renderização
+Login	API → formulário → autenticação → tokens → sessão
+Logout	sessão → remoção de tokens → atualização do contexto
+Restauração	sessionStorage → validação → perfil → renderização
+Jogo	API → imagem → mapa → resposta → resultado
+Ranking	API → dados → componentes → renderização

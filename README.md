@@ -12,6 +12,12 @@ CREATE DATABASE
 
 export DB_PASSWORD='A_TUA_PASSWORD'
 
+# Origens permitidas para chamadas do frontend (separadas por vírgula)
+export CORS_ALLOWED_ORIGINS='http://localhost:5173'
+
+# Necessário para requisições com métodos POST, PUT, PATCH ou DELETE
+export CSRF_TRUSTED_ORIGINS='http://localhost:5173'
+
 ## ROUTES DA API
 
 ## Multiplayer API
