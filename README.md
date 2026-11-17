@@ -77,5 +77,10 @@ disponibiliza quatro opções de resposta.
 | POST | `/sessions/{session_id}/end/` | Encerra o quiz activo do utilizador. |
 | GET | `/sessions/{session_id}/questions/` | Lista as perguntas activas e as respectivas opções. |
 | GET | `/sessions/{session_id}/questions/{question_id}/` | Consulta uma pergunta específica da sessão activa. |
-| POST | `/sessions/{session_id}/questions/{question_id}/answer/` | Submete uma resposta através de `{"option_id": id}`. |
+| POST | `/sessions/{session_id}/questions/{question_id}/answer/` | Submete uma resposta através de `{"option_id": id}`, regista a resposta e actualiza a pontuação. |
+
+Cada resposta correcta vale 100 pontos. Uma pergunta só pode ser respondida uma
+vez por sessão. As respostas de sessão incluem `answered_questions`,
+`total_questions`, `score` e `percentage`. A sessão é concluída automaticamente
+quando todas as perguntas activas forem respondidas.
 

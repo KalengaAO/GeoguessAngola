@@ -25,6 +25,13 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class QuizProgressSerializer(serializers.Serializer):
+    answered_questions = serializers.IntegerField(read_only=True)
+    total_questions = serializers.IntegerField(read_only=True)
+    score = serializers.IntegerField(read_only=True)
+    percentage = serializers.FloatField(read_only=True)
+
+
 class SubmitQuizAnswerSerializer(serializers.Serializer):
     option_id = serializers.PrimaryKeyRelatedField(
         queryset=QuizOption.objects.all(),

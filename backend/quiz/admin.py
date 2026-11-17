@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import QuizOption, QuizQuestion, QuizSession
+from .models import QuizAnswer, QuizOption, QuizQuestion, QuizSession
 
 
 class QuizOptionInline(admin.TabularInline):
@@ -29,3 +29,17 @@ class QuizSessionAdmin(admin.ModelAdmin):
     list_display = ("user", "status", "started_at", "ended_at")
     list_filter = ("status",)
     search_fields = ("user__username",)
+
+
+@admin.register(QuizAnswer)
+class QuizAnswerAdmin(admin.ModelAdmin):
+    list_display = (
+        "session",
+        "question",
+        "option",
+        "is_correct",
+        "score",
+        "answered_at",
+    )
+    list_filter = ("is_correct",)
+    search_fields = ("session__user__username", "question__question")

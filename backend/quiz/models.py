@@ -20,6 +20,7 @@ class QuizSession(models.Model):
     )
     started_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    score = models.PositiveIntegerField(default=0)
 
     class Meta:
         constraints = [
@@ -90,3 +91,36 @@ class QuizOption(models.Model):
 
     def __str__(self):
         return f"{self.question_id} - {self.order}"
+
+
+class QuizAnswer(models.Model):
+    session = models.ForeignKey(
+        QuizSession,
+        on_delete=models.CASCADE,
+        related_name="answers",
+    )
+    question = models.ForeignKey(
+        QuizQuestion,
+        on_delete=models.PROTECT,
+        related_name="quiz_answers",
+    )
+    option = models.ForeignKey(
+        QuizOption,
+        on_delete=models.PROTECT,
+        related_name="quiz_answers",
+    )
+    is_correct = models.BooleanField()
+    score = models.PositiveIntegerField(default=0)
+    answered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["session", "question"],
+                name="unique_quiz_answer_per_question",
+            ),
+        ]
+        ordering = ["answered_at"]
+
+    def __str__(self):
+        return f"Quiz {self.session_id} - Pergunta {self.question_id}"
