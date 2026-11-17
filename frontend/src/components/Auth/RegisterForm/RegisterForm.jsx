@@ -4,6 +4,7 @@ import { registerUser } from "../../../services/authService";
 import { useAppForm } from "../../../hooks/useAppForm";
 import { getApiErrorMessage } from "../../../utils/apiErrors";
 import { registerSchema } from "../../../schemas/authSchemas";
+import { useNavigate } from "react-router-dom";
 import "./RegisterForm.css";
 
 const defaultValues = {
@@ -13,6 +14,7 @@ const defaultValues = {
 
 function RegisterForm() {
     const registerMutation = useMutation({ mutationFn: registerUser });
+    const navigate = useNavigate();
 
     const { form, handleSubmit, isSubmitting, fieldError } = useAppForm({
         schema: registerSchema,
@@ -24,6 +26,7 @@ function RegisterForm() {
                     response.detail || "Utilizador criado com sucesso."
                 );
                 form.reset(defaultValues);
+                navigate("/login");
             } catch (requestError) {
                 toast.error(
                     getApiErrorMessage(
