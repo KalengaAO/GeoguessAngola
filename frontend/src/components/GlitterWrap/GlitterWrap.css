@@ -1,0 +1,21 @@
+.glitter-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    opacity: 0.55;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.glitter-wrap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 760px) {
+    .glitter-wrap {
+        opacity: 0.4;
+    }
+}

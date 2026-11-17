@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "../../../hooks/useAuth";
@@ -8,8 +7,7 @@ import { getApiErrorMessage } from "../../../utils/apiErrors";
 import "./ProfileSidebar.css";
 
 function ProfileSidebar() {
-    const navigate = useNavigate();
-    const { user, updateProfile, logout } = useAuth();
+    const { user, updateProfile } = useAuth();
 
     const [formData, setFormData] = useState({
         email: user?.email || "",
@@ -18,14 +16,6 @@ function ProfileSidebar() {
 
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
-    // Mantém o formulário sincronizado com os dados do utilizador.
-    useEffect(() => {
-        setFormData({
-            email: user?.email || "",
-            bio: user?.bio || "",
-        });
-    }, [user?.email, user?.bio]);
 
     function handleChange(event) {
         const { name, value } = event.target;
@@ -65,11 +55,6 @@ function ProfileSidebar() {
         } finally {
             setIsLoading(false);
         }
-    }
-
-    function handleLogout() {
-        logout();
-        navigate("/", { replace: true });
     }
 
     return (
@@ -174,14 +159,6 @@ function ProfileSidebar() {
                 )}
 
             </form>
-
-            <button
-                type="button"
-                className="profile-sidebar__logout"
-                onClick={handleLogout}
-            >
-                Terminar sessão
-            </button>
 
         </aside>
     );

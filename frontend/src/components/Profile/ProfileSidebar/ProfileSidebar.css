@@ -34,7 +34,7 @@
 }
 
 .profile-sidebar__eyebrow {
-    color: --color-white;
+    color: var(--color-white);
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 2px;

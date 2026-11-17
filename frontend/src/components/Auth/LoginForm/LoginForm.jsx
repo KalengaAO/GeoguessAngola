@@ -24,7 +24,7 @@ function LoginForm() {
                 const session = await login(credentials);
                 toast.success(`Bem-vindo, ${session.user.username}.`);
                 form.reset(defaultValues);
-                navigate(location.state?.from?.pathname || "/profile", {
+                navigate(location.state?.from?.pathname || "/games", {
                     replace: true,
                 });
             } catch (requestError) {

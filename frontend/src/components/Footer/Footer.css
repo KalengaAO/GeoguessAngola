@@ -23,12 +23,12 @@
 .footer__brand {
     display: inline-block;
     margin-bottom: 1rem;
-    font-size: 1.6rem;
-    font-weight: 800;
 }
 
-.footer__brand span {
-    color: #FFC629;
+.footer__brand img {
+    display: block;
+    width: 140px;
+    height: auto;
 }
 
 .footer__identity p,

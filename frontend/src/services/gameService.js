@@ -30,6 +30,11 @@ export async function getGameStats() {
     return data;
 }
 
+export async function getLeaderboard(options = {}) {
+    const { data } = await api.get(`${GAME_BASE}/leaderboard/`, options);
+    return data;
+}
+
 export async function getGameStatus(sessionId) {
     const { data } = await api.get(`${GAME_BASE}/${sessionId}/status/`);
     return data;

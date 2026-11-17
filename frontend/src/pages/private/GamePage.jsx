@@ -1,32 +1,23 @@
-
-import { useState, useEffect } from "react";
-import { useLocation, useParams, Link } from "react-router-dom";
-import { toast } from "sonner";
-
+import { useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import {
-    MapContainer,
-    TileLayer,
     CircleMarker,
-    Popup,
+    MapContainer,
     Polyline,
-    useMapEvents,
+    Popup,
+    TileLayer,
     useMap,
+    useMapEvents,
 } from "react-leaflet";
-
-import {
-    submitGameAnswer,
-    startNextRound,
-} from "../../services/gameService";
-
+import BrandLogo from "../../components/BrandLogo/BrandLogo";
+import useGameSession from "../../hooks/useGameSession";
 import "leaflet/dist/leaflet.css";
 import "./GamePage.css";
-
 
 function MapClickHandler({ onLocationSelect, disabled }) {
     useMapEvents({
         click(event) {
             if (disabled) return;
-
             onLocationSelect({
                 latitude: event.latlng.lat,
                 longitude: event.latlng.lng,
@@ -37,193 +28,152 @@ function MapClickHandler({ onLocationSelect, disabled }) {
     return null;
 }
 
-
-// Ajusta o mapa para mostrar os dois pontos.
 function ResultMapBounds({ selectedLocation, correctLocation }) {
     const map = useMap();
 
     useEffect(() => {
         if (!selectedLocation || !correctLocation) return;
 
-        const bounds = [
+        map.fitBounds(
             [
-                selectedLocation.latitude,
-                selectedLocation.longitude,
+                [selectedLocation.latitude, selectedLocation.longitude],
+                [correctLocation.latitude, correctLocation.longitude],
             ],
-            [
-                correctLocation.latitude,
-                correctLocation.longitude,
-            ],
-        ];
-
-        map.fitBounds(bounds, {
-            padding: [40, 40],
-            maxZoom: 8,
-        });
+            { padding: [40, 40], maxZoom: 8 }
+        );
     }, [map, selectedLocation, correctLocation]);
 
     return null;
 }
 
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
 
 function GamePage() {
     const { sessionId } = useParams();
-    const location = useLocation();
+    const {
+        round,
+        rounds,
+        totalRounds,
+        totalScore,
+        selectedLocation,
+        roundResult,
+        secondsLeft,
+        resultCountdown,
+        isLoading,
+        loadError,
+        isSubmitting,
+        isAdvancing,
+        advanceFailed,
+        isFinished,
+        isLastRound,
+        setSelectedLocation,
+        submitGuess,
+        goToNextRound,
+    } = useGameSession(sessionId);
 
-    const game = location.state?.game;
-
-    const [round, setRound] = useState(game?.round ?? null);
-    const [selectedLocation, setSelectedLocation] = useState(null);
-    const [roundResult, setRoundResult] = useState(null);
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isAdvancing, setIsAdvancing] = useState(false);
-    const [isFinished, setIsFinished] = useState(false);
-
-    if (!round && !isFinished) {
+    if (isLoading) {
         return (
             <main className="game-page">
-                <div className="game-page__message">
-                    <h1>Ronda indisponível</h1>
-                    <p>
-                        Não foi possível recuperar os dados desta ronda.
-                        Inicia uma nova partida a partir do teu perfil.
-                    </p>
-                </div>
+                <p className="game-page__message" role="status">
+                    A carregar a partida...
+                </p>
             </main>
         );
     }
 
-    const correctLocation = roundResult?.correct_location;
-
-    async function handleSubmitAnswer() {
-        if (!selectedLocation) {
-            toast.error("Selecciona primeiro uma localização no mapa.");
-            return;
-        }
-
-        if (roundResult || isSubmitting) return;
-
-        try {
-            setIsSubmitting(true);
-
-            const result = await submitGameAnswer(
-                round.id,
-                selectedLocation
-            );
-
-            setRoundResult(result);
-
-        } catch (error) {
-            console.error("Erro ao submeter resposta:", error);
-
-            toast.error(
-                error.response?.data?.detail ||
-                "Não foi possível submeter a tua resposta."
-            );
-        } finally {
-            setIsSubmitting(false);
-        }
+    if (loadError || (!round && !isFinished)) {
+        return (
+            <main className="game-page">
+                <div className="game-page__message">
+                    <h1>Partida indisponível</h1>
+                    <p>
+                        Não foi possível recuperar esta partida. Inicia um novo
+                        jogo a partir da área de jogos.
+                    </p>
+                    <Link to="/games" className="game-page__submit-button">
+                        Voltar aos jogos
+                    </Link>
+                </div>
+            </main>
+        );
     }
-
-
-    async function handleNextRound() {
-        if (isAdvancing || !roundResult) return;
-
-        try {
-            setIsAdvancing(true);
-
-            const data = await startNextRound(sessionId);
-
-            // A partida terminou.
-            if (
-                data.session_status === "completed" ||
-                !data.round
-            ) {
-                setIsFinished(true);
-                setRoundResult(null);
-                setSelectedLocation(null);
-                return;
-            }
-
-            // Preparar a próxima ronda.
-            setRound(data.round);
-            setSelectedLocation(null);
-            setRoundResult(null);
-
-        } catch (error) {
-            console.error("Erro ao avançar de ronda:", error);
-
-            toast.error(
-                error.response?.data?.detail ||
-                "Não foi possível avançar para a próxima ronda."
-            );
-        } finally {
-            setIsAdvancing(false);
-        }
-    }
-
 
     if (isFinished) {
         return (
             <main className="game-page">
                 <header className="game-page__header">
-                    <div className="game-page__brand">
-                        <Link to="/profile">
-                            <span>GEOGUESS</span> ANGOLA
-                        </Link>
-                    </div>
+                    <BrandLogo to="/games" className="game-page__brand" compact />
                 </header>
 
-                <section className="game-page__content">
-                    <div className="game-page__result">
-                        <h1>Partida concluída!</h1>
-
-                        <p>
-                            Terminaste todas as rondas.
-                        </p>
-
-                        <Link
-                            to="/profile"
-                            className="game-page__submit-button"
-                        >
-                            Voltar ao perfil
-                        </Link>
-                    </div>
+                <section className="game-page__summary">
+                    <p className="game-page__eyebrow">JORNADA CONCLUÍDA</p>
+                    <h1>Partida concluída!</h1>
+                    <p className="game-page__summary-total">
+                        Pontuação final
+                        <strong>{totalScore.toLocaleString("pt-PT")}</strong>
+                    </p>
+                    <ul className="game-page__summary-list">
+                        {rounds.map((completedRound) => (
+                            <li key={completedRound.id}>
+                                <span>Ronda {completedRound.number}</span>
+                                <span>
+                                    {completedRound.timed_out
+                                        ? "Tempo esgotado"
+                                        : completedRound.distance_km != null
+                                            ? `${completedRound.distance_km} km`
+                                            : "Concluída"}
+                                </span>
+                                <strong>{completedRound.score ?? 0} pts</strong>
+                            </li>
+                        ))}
+                    </ul>
+                    <Link
+                        to="/games"
+                        className="game-page__submit-button"
+                    >
+                        Jogar outra partida
+                    </Link>
                 </section>
             </main>
         );
     }
 
+    const correctLocation = roundResult?.correct_location;
+    const isTimerUrgent = secondsLeft <= 10 && !roundResult;
+    const isTimerExpired = secondsLeft <= 0 && !roundResult;
 
     return (
         <main className="game-page">
             <header className="game-page__header">
-                <div className="game-page__brand">
-                    <Link to="/profile">
-                        <span>GEOGUESS</span> ANGOLA
-                    </Link>
-                </div>
-
+                <BrandLogo to="/games" className="game-page__brand" compact />
                 <div className="game-page__round-info">
-                    <span>Partida {sessionId}</span>
-                    <span>Ronda {round.number}</span>
+                    <span>Ronda {round.number} de {totalRounds}</span>
+                    <span className="game-page__score">
+                        {totalScore.toLocaleString("pt-PT")} pts
+                    </span>
+                    <span
+                        className={`game-page__timer-display${isTimerUrgent ? " is-urgent" : ""}${isTimerExpired ? " is-expired" : ""}`}
+                        role="timer"
+                        aria-label={`Tempo restante: ${secondsLeft} segundos`}
+                    >
+                        {formatTime(secondsLeft)}
+                    </span>
                 </div>
             </header>
 
-
             <section className="game-page__content">
-
                 <div className="game-page__landscape">
                     <div className="game-page__section-heading">
                         <h1>Onde fica este lugar?</h1>
-
                         <p>
                             Observa a paisagem e identifica a sua localização
                             no mapa de Angola.
                         </p>
                     </div>
-
                     <div className="game-page__image-container">
                         <img
                             src={round.image_url}
@@ -233,23 +183,19 @@ function GamePage() {
                     </div>
                 </div>
 
-
                 <div className="game-page__map-section">
-
                     <div className="game-page__map-heading">
                         <h2>
                             {roundResult
                                 ? "Comparação das localizações"
                                 : "Selecciona a localização"}
                         </h2>
-
                         <p>
                             {roundResult
                                 ? "Compara o teu palpite com a localização verdadeira."
                                 : "Clica no mapa para colocar o teu marcador."}
                         </p>
                     </div>
-
 
                     <div className="game-page__map">
                         <MapContainer
@@ -262,15 +208,14 @@ function GamePage() {
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
-
                             <MapClickHandler
                                 onLocationSelect={setSelectedLocation}
                                 disabled={
-                                    Boolean(roundResult) || isSubmitting
+                                    Boolean(roundResult) ||
+                                    isSubmitting ||
+                                    secondsLeft <= 0
                                 }
                             />
-
-
                             {selectedLocation && (
                                 <CircleMarker
                                     center={[
@@ -284,13 +229,9 @@ function GamePage() {
                                         fillOpacity: 1,
                                     }}
                                 >
-                                    <Popup>
-                                        Localização escolhida
-                                    </Popup>
+                                    <Popup>Localização escolhida</Popup>
                                 </CircleMarker>
                             )}
-
-
                             {correctLocation && (
                                 <CircleMarker
                                     center={[
@@ -304,13 +245,9 @@ function GamePage() {
                                         fillOpacity: 1,
                                     }}
                                 >
-                                    <Popup>
-                                        Localização verdadeira
-                                    </Popup>
+                                    <Popup>Localização verdadeira</Popup>
                                 </CircleMarker>
                             )}
-
-
                             {selectedLocation && correctLocation && (
                                 <>
                                     <Polyline
@@ -330,7 +267,6 @@ function GamePage() {
                                             dashArray: "8 8",
                                         }}
                                     />
-
                                     <ResultMapBounds
                                         selectedLocation={selectedLocation}
                                         correctLocation={correctLocation}
@@ -340,85 +276,81 @@ function GamePage() {
                         </MapContainer>
                     </div>
 
-
                     {selectedLocation && (
                         <div className="game-page__selection">
                             <span>Localização seleccionada</span>
-
-                            <p>
-                                Latitude: {selectedLocation.latitude.toFixed(6)}
-                            </p>
-
-                            <p>
-                                Longitude: {selectedLocation.longitude.toFixed(6)}
-                            </p>
+                            <p>Latitude: {selectedLocation.latitude.toFixed(6)}</p>
+                            <p>Longitude: {selectedLocation.longitude.toFixed(6)}</p>
                         </div>
                     )}
 
+                    {roundResult && (
+                        <div className="game-page__result">
+                            <h2>Resultado da ronda</h2>
+                            {roundResult.timed_out && (
+                                <p className="game-page__result-note">
+                                    O tempo terminou. Esta ronda não recebeu pontos.
+                                </p>
+                            )}
+                            <div className="game-page__result-stats">
+                                <div>
+                                    <span>Distância</span>
+                                    <strong>
+                                        {roundResult.distance_km == null
+                                            ? "—"
+                                            : `${roundResult.distance_km} km`}
+                                    </strong>
+                                </div>
+                                <div>
+                                    <span>Pontuação</span>
+                                    <strong>{roundResult.score} pontos</strong>
+                                </div>
+                            </div>
+                            {correctLocation && (
+                                <div className="game-page__map-legend">
+                                    <span><i className="guess-marker" /> O teu palpite</span>
+                                    <span><i className="correct-marker" /> Localização verdadeira</span>
+                                </div>
+                            )}
+                            <p className="game-page__countdown">
+                                {isAdvancing
+                                    ? "A carregar a próxima ronda..."
+                                    : `Avanço automático em ${resultCountdown}s`}
+                            </p>
+                            <button
+                                type="button"
+                                className="game-page__submit-button"
+                                onClick={goToNextRound}
+                                disabled={isAdvancing}
+                            >
+                                {isLastRound ? "Concluir partida" : "Próxima ronda"}
+                            </button>
+                        </div>
+                    )}
 
                     {!roundResult && (
                         <button
                             type="button"
                             className="game-page__submit-button"
-                            onClick={handleSubmitAnswer}
-                            disabled={!selectedLocation || isSubmitting}
+                            onClick={submitGuess}
+                            disabled={
+                                !selectedLocation ||
+                                isSubmitting ||
+                                secondsLeft <= 0
+                            }
                         >
                             {isSubmitting
                                 ? "A submeter..."
-                                : "Confirmar localização"}
+                                : secondsLeft <= 0
+                                    ? "A registar fim do tempo..."
+                                    : "Confirmar localização"}
                         </button>
                     )}
-
-
-                    {roundResult && (
-                        <div className="game-page__result">
-                            <h2>Resultado da ronda</h2>
-
-                            <div className="game-page__result-stats">
-                                <div>
-                                    <span>Distância</span>
-                                    <strong>
-                                        {roundResult.distance_km} km
-                                    </strong>
-                                </div>
-
-                                <div>
-                                    <span>Pontuação</span>
-                                    <strong>
-                                        {roundResult.score} pontos
-                                    </strong>
-                                </div>
-                            </div>
-
-
-                            {correctLocation && (
-                                <div className="game-page__map-legend">
-                                    <span>
-                                        <i className="guess-marker" />
-                                        O teu palpite
-                                    </span>
-
-                                    <span>
-                                        <i className="correct-marker" />
-                                        Localização verdadeira
-                                    </span>
-                                </div>
-                            )}
-
-
-                            <button
-                                type="button"
-                                className="game-page__submit-button game-page__next-button"
-                                onClick={handleNextRound}
-                                disabled={isAdvancing}
-                            >
-                                {isAdvancing
-                                    ? "A carregar..."
-                                    : "Próxima ronda"}
-                            </button>
-                        </div>
+                    {advanceFailed && (
+                        <p className="game-page__timeout-error" role="alert">
+                            Não foi possível avançar. Tenta novamente.
+                        </p>
                     )}
-
                 </div>
             </section>
         </main>

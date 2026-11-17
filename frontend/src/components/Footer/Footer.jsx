@@ -57,8 +57,15 @@ function Footer() {
                 {!isAuthenticated && (
                     <>
                         <div className="footer__identity">
-                            <Link to="/" className="footer__brand">
-                                GeoGuess Angola
+                            <Link
+                                to="/"
+                                className="footer__brand"
+                                aria-label="GeoGuess Angola"
+                            >
+                                <img
+                                    src="/images/logo/logo-stacked-color-dark.svg"
+                                    alt=""
+                                />
                             </Link>
 
                             <p>

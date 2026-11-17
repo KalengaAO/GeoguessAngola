@@ -1,5 +1,7 @@
 
 import { useEffect, useState } from "react";
+import { ArrowRight, Gamepad2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import Navbar from "../Navbar/Navbar";
 import landscapes from "../../config/landscapes";
 import "./Header.css";
@@ -51,6 +53,11 @@ function Header({ activeAuthPanel, onToggleAuth }) {
                     de Angola através de um desafio de exploração
                     e conhecimento geográfico.
                 </p>
+                <Link className="header__play-button" to="/login">
+                    <Gamepad2 size={19} aria-hidden="true" />
+                    Jogar agora
+                    <ArrowRight size={17} aria-hidden="true" />
+                </Link>
             </div>
 
             <div className="header__location">

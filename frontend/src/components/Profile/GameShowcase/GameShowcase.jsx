@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import showcaseImages from "./showcaseImages";
 
 import { startGame } from "../../../services/gameService";
-import { startMultiplayer } from "../../../services/multiplayerService";
 import { startQuizSession } from "../../../services/quizService";
 
 import "./GameShowcase.css";
@@ -47,21 +46,7 @@ function GameShowcase() {
     }
 
     async function handleStartMultiplayer() {
-        try {
-            setLoadingMode("multiplayer");
-
-            await startMultiplayer();
-
-            toast.success("Pedido de partida Multiplayer enviado.");
-        } catch (error) {
-            console.error("Erro ao iniciar Multiplayer:", error);
-            toast.error(
-                error.response?.data?.detail ||
-                "Não foi possível iniciar o Multiplayer."
-            );
-        } finally {
-            setLoadingMode(null);
-        }
+        navigate("/games", { state: { openMultiplayer: true } });
     }
 
     async function handleStartQuiz() {

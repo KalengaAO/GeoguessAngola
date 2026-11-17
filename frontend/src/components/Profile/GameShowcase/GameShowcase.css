@@ -77,7 +77,8 @@
     letter-spacing: 3px;
 }
 
-.game-showcase__content h1 {
+.game-showcase__content h1,
+.game-showcase__content h2 {
     margin: 0;
 
     color: var(--color-white);
@@ -131,6 +132,12 @@
         border-color 0.3s ease,
         transform 0.3s ease,
         box-shadow 0.3s ease;
+}
+
+.game-showcase__button--multiplayer,
+.game-showcase__button--quiz {
+    background: rgba(8, 8, 8, 0.72);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Hover */

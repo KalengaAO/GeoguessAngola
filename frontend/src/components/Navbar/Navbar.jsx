@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import BrandLogo from "../BrandLogo/BrandLogo";
 import "./Navbar.css";
 
 function Navbar({ activeAuthPanel, onToggleAuth }) {
@@ -7,9 +7,7 @@ function Navbar({ activeAuthPanel, onToggleAuth }) {
         <nav className="navbar">
             <div className="navbar__container">
 
-                <Link to="/" className="navbar__brand">
-                    GeoGuess <span>Angola</span>
-                </Link>
+                <BrandLogo to="/" className="navbar__brand" />
 
                 <div className="navbar__actions">
                     <button

@@ -43,7 +43,6 @@ export default function useGameSession(sessionId) {
     const advancingRef = useRef(false);
     const timeUpRoundRef = useRef(null);
     const deadlineRef = useRef(null);
-    const latestRef = useRef({});
 
     // ---------- Aplicar estado recebido da API ----------
 
@@ -68,10 +67,11 @@ export default function useGameSession(sessionId) {
                 score: current.score,
                 correct_location: current.correct_location,
                 guessed_location: guessedLocation,
-                timed_out: guessedLocation === null,
+                timed_out: current.timed_out ?? guessedLocation === null,
             });
 
             setSelectedLocation(guessedLocation);
+            setResultCountdown(RESULT_DISPLAY_SECONDS);
         } else {
             const remaining =
                 current?.seconds_remaining ??
@@ -83,6 +83,7 @@ export default function useGameSession(sessionId) {
             setSecondsLeft(Math.ceil(remaining));
             setRoundResult(null);
             setSelectedLocation(null);
+            setResultCountdown(RESULT_DISPLAY_SECONDS);
         }
     }, []);
 
@@ -177,6 +178,7 @@ export default function useGameSession(sessionId) {
 
                 setRoundResult(normalizedResult);
                 setSelectedLocation(guessedLocation);
+                setResultCountdown(RESULT_DISPLAY_SECONDS);
 
                 setStatus((prev) =>
                     prev
@@ -200,6 +202,8 @@ export default function useGameSession(sessionId) {
                                             distance_km: result.distance_km,
                                             correct_location:
                                                 result.correct_location,
+                                            timed_out:
+                                                result.timed_out ?? false,
                                             guessed_latitude:
                                                 guessedLocation?.latitude ?? null,
                                             guessed_longitude:
@@ -251,20 +255,14 @@ export default function useGameSession(sessionId) {
 
         timeUpRoundRef.current = round.id;
 
-        const ok = selectedLocation
-            ? await finishRound((roundId) =>
-                  submitGameAnswer(roundId, selectedLocation)
-              )
-            : await finishRound((roundId) =>
-                  timeoutRound(roundId)
-              );
+        const ok = await finishRound((roundId) => timeoutRound(roundId));
 
         if (!ok) {
             setTimeout(() => {
                 timeUpRoundRef.current = null;
             }, 2000);
         }
-    }, [round, roundResult, selectedLocation, finishRound]);
+    }, [round, roundResult, finishRound]);
 
     // ---------- Avançar para a próxima ronda ----------
 
@@ -299,17 +297,21 @@ export default function useGameSession(sessionId) {
         }
     }, [sessionId, roundResult, applyStatus]);
 
-    // ---------- Handlers mais recentes ----------
+    const latestRef = useRef({});
 
-    latestRef.current = {
-        handleTimeUp,
-        goToNextRound,
-    };
+    useEffect(() => {
+        latestRef.current = {
+            handleTimeUp,
+            goToNextRound,
+        };
+    }, [handleTimeUp, goToNextRound]);
 
     // ---------- Temporizador da ronda ----------
 
+    const roundId = round?.id;
+
     useEffect(() => {
-        if (!round || roundResult || isFinished) {
+        if (!roundId || roundResult || isFinished) {
             return undefined;
         }
 
@@ -333,18 +335,16 @@ export default function useGameSession(sessionId) {
         const id = setInterval(tick, 250);
 
         return () => clearInterval(id);
-    }, [round?.id, roundResult, isFinished]);
+    }, [roundId, roundResult, isFinished]);
 
     // ---------- Contagem até à próxima ronda ----------
 
     useEffect(() => {
-        if (!round || !roundResult || isFinished) {
+        if (!roundId || !roundResult || isFinished) {
             return undefined;
         }
 
         let left = RESULT_DISPLAY_SECONDS;
-
-        setResultCountdown(left);
 
         const id = setInterval(() => {
             left -= 1;
@@ -358,7 +358,7 @@ export default function useGameSession(sessionId) {
         }, 1000);
 
         return () => clearInterval(id);
-    }, [round?.id, roundResult, isFinished]);
+    }, [roundId, roundResult, isFinished]);
 
     // ---------- Dados e acções disponibilizados à página ----------
         

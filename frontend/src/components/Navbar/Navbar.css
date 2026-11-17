@@ -19,6 +19,10 @@
     margin: 0 auto;
 }
 
+.navbar__brand {
+    margin-right: auto;
+}
+
 /* Navegação central */
 .navbar__links,
 .navbar__actions {
@@ -78,6 +82,10 @@
 @media (max-width: 480px) {
     .navbar__container {
         justify-content: center;
+    }
+
+    .navbar__brand {
+        margin-right: 0;
     }
 
     .navbar__links,

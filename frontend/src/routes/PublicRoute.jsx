@@ -14,7 +14,7 @@ function PublicRoute({ children }) {
     }
 
     if (isAuthenticated) {
-        return <Navigate to="/profile" replace />;
+        return <Navigate to="/games" replace />;
     }
 
     return children;

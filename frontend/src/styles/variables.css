@@ -50,4 +50,25 @@
     /* Camadas */
     --z-navbar: 100;
     --z-overlay: 200;
+
+    --background: var(--color-black);
+    --foreground: var(--color-white);
+    --card: #16090b;
+    --card-foreground: var(--color-white);
+    --popover: #16090b;
+    --popover-foreground: var(--color-white);
+    --primary: var(--color-crimson);
+    --primary-foreground: var(--color-white);
+    --secondary: #311014;
+    --secondary-foreground: var(--color-white);
+    --muted: #251316;
+    --muted-foreground: rgba(255, 255, 255, 0.62);
+    --accent: var(--color-gold);
+    --accent-foreground: var(--color-black);
+    --destructive: #b42332;
+    --destructive-foreground: var(--color-white);
+    --border: rgba(255, 255, 255, 0.12);
+    --input: rgba(255, 255, 255, 0.15);
+    --ring: var(--color-gold);
+    --radius: 0.75rem;
 }

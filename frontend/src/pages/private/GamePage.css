@@ -21,27 +21,76 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.game-page__brand {
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-.game-page__brand a {
-    color: inherit;
-    text-decoration: none;
-}
-
-.game-page__brand span {
-    color: #FFC629;
-}
-
 .game-page__round-info {
     display: flex;
     flex-wrap: wrap;
     gap: 24px;
     color: rgba(255, 255, 255, 0.75);
     font-size: 14px;
+}
+
+.game-page__timer-display {
+    display: inline-flex;
+    min-width: 76px;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.7rem;
+    color: var(--color-gold);
+    background: rgba(255, 198, 41, 0.08);
+    border: 1px solid rgba(255, 198, 41, 0.25);
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+}
+
+.game-page__score {
+    color: var(--color-gold);
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+}
+
+.game-page__timer-display.is-urgent {
+    color: #ff9a9a;
+    background: rgba(180, 35, 50, 0.13);
+    border-color: rgba(248, 113, 113, 0.4);
+    animation: timer-pulse 1s ease-in-out infinite alternate;
+}
+
+.game-page__timer-display.is-expired {
+    color: var(--text-secondary);
+    animation: none;
+}
+
+.game-page__timeout-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.8rem;
+    padding: 0.8rem;
+    color: #ffb0b0;
+    background: rgba(180, 35, 50, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    border-radius: 0.6rem;
+    font-size: 0.8rem;
+}
+
+.game-page__timeout-grace {
+    margin-top: 0.65rem;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+}
+
+.game-page__timeout-error button {
+    color: var(--color-gold);
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+@keyframes timer-pulse {
+    to {
+        box-shadow: 0 0 14px rgba(248, 113, 113, 0.22);
+    }
 }
 
 /* ---------- Layout ---------- */
@@ -324,6 +373,20 @@
     font-size: 26px;
 }
 
+.game-page__eyebrow {
+    margin: 0 0 8px;
+    color: var(--color-gold);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.game-page__summary > .game-page__submit-button {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+}
+
 .game-page__summary-total {
     margin: 0 0 24px;
     color: rgba(255, 255, 255, 0.75);
@@ -393,5 +456,13 @@
 
     .game-page__summary {
         padding: 22px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .game-page__timer-display,
+    .game-page__timer-fill {
+        animation: none;
+        transition: none;
     }
 }
