@@ -1,35 +1,27 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 import {
-    getGameStats,
+    getGameStatus,
     submitGameAnswer,
     timeoutRound,
     startNextRound,
 } from "../services/gameService";
 
-// Tempo em que o resultado fica visível antes de avançar sozinho.
 export const RESULT_DISPLAY_SECONDS = 6;
 
 const DEFAULT_TIME_LIMIT = 30;
 
 function toLocation(latitude, longitude) {
     return latitude != null && longitude != null
-        ? { latitude, longitude }
+        ? {
+              latitude: Number(latitude),
+              longitude: Number(longitude),
+          }
         : null;
 }
 
-/**
- * Lógica de uma partida single-player.
- *
- * - O servidor é a fonte da verdade (tudo vem de /status/).
- * - Cada ronda tem um limite de tempo (30s). Se o tempo acabar, o palpite
- *   escolhido é enviado automaticamente; sem palpite, a ronda vale 0.
- * - Depois do resultado, a próxima ronda abre sozinha.
- *
- * Para o multiplayer, cria um hook paralelo com a mesma forma de retorno
- * e reutiliza os mesmos componentes.
- */
 export default function useGameSession(sessionId) {
     const [status, setStatus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -47,14 +39,14 @@ export default function useGameSession(sessionId) {
         RESULT_DISPLAY_SECONDS
     );
 
-    // Refs: bloqueiam chamadas duplicadas (o estado do React é assíncrono).
     const submittingRef = useRef(false);
     const advancingRef = useRef(false);
     const timeUpRoundRef = useRef(null);
     const deadlineRef = useRef(null);
     const latestRef = useRef({});
 
-    // Aplica o estado vindo do servidor (também restaura após refresh).
+    // ---------- Aplicar estado recebido da API ----------
+
     const applyStatus = useCallback((data) => {
         setStatus(data);
         setAdvanceFailed(false);
@@ -65,16 +57,21 @@ export default function useGameSession(sessionId) {
         if (current?.is_answered) {
             deadlineRef.current = null;
 
+            const guessedLocation = toLocation(
+                current.guessed_latitude,
+                current.guessed_longitude
+            );
+
             setRoundResult({
                 round_id: current.id,
                 distance_km: current.distance_km,
                 score: current.score,
                 correct_location: current.correct_location,
-                timed_out: current.guessed_latitude == null,
+                guessed_location: guessedLocation,
+                timed_out: guessedLocation === null,
             });
-            setSelectedLocation(
-                toLocation(current.guessed_latitude, current.guessed_longitude)
-            );
+
+            setSelectedLocation(guessedLocation);
         } else {
             const remaining =
                 current?.seconds_remaining ??
@@ -89,6 +86,8 @@ export default function useGameSession(sessionId) {
         }
     }, []);
 
+    // ---------- Carregar partida ----------
+
     useEffect(() => {
         let cancelled = false;
 
@@ -97,14 +96,21 @@ export default function useGameSession(sessionId) {
                 setIsLoading(true);
                 setLoadError(false);
 
-                const data = await (sessionId);
+                const data = await getGameStatus(sessionId);
 
-                if (!cancelled) applyStatus(data);
+                if (!cancelled) {
+                    applyStatus(data);
+                }
             } catch (error) {
                 console.error("Erro ao carregar a partida:", error);
-                if (!cancelled) setLoadError(true);
+
+                if (!cancelled) {
+                    setLoadError(true);
+                }
             } finally {
-                if (!cancelled) setIsLoading(false);
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
         }
 
@@ -115,18 +121,37 @@ export default function useGameSession(sessionId) {
         };
     }, [sessionId, applyStatus]);
 
-    const rounds = status?.rounds ?? [];
-    const round = rounds.length ? rounds[rounds.length - 1] : null;
-    const totalRounds = status?.progress?.total_rounds ?? rounds.length;
-    const totalScore = status?.total_score ?? 0;
-    const timeLimit = status?.time_limit_seconds ?? DEFAULT_TIME_LIMIT;
-    const isFinished = Boolean(status?.is_finished);
-    const isLastRound = round ? round.number >= totalRounds : false;
+    // ---------- Dados derivados ----------
 
-    // ---------- Fechar a ronda (palpite ou timeout) ----------
+    const rounds = status?.rounds ?? [];
+
+    const round = rounds.length
+        ? rounds[rounds.length - 1]
+        : null;
+
+    const totalRounds =
+        status?.progress?.total_rounds ?? rounds.length;
+
+    const totalScore = status?.total_score ?? 0;
+
+    const timeLimit =
+        status?.time_limit_seconds ?? DEFAULT_TIME_LIMIT;
+
+    const isFinished =
+        status?.is_finished === true ||
+        status?.session_status === "completed";
+
+    const isLastRound = round
+        ? round.number >= totalRounds
+        : false;
+
+    // ---------- Fechar ronda ----------
+
     const finishRound = useCallback(
         async (request) => {
-            if (!round || roundResult || submittingRef.current) return false;
+            if (!round || roundResult || submittingRef.current) {
+                return false;
+            }
 
             submittingRef.current = true;
             setIsSubmitting(true);
@@ -136,10 +161,22 @@ export default function useGameSession(sessionId) {
 
                 deadlineRef.current = null;
 
-                setRoundResult(result);
-                setSelectedLocation(
-                    toLocation(result.guessed_latitude, result.guessed_longitude)
-                );
+                const guessedLocation =
+                    result.guessed_location ??
+                    toLocation(
+                        result.guessed_latitude,
+                        result.guessed_longitude
+                    );
+
+                const normalizedResult = {
+                    ...result,
+                    guessed_location: guessedLocation,
+                    guessed_latitude: guessedLocation?.latitude ?? null,
+                    guessed_longitude: guessedLocation?.longitude ?? null,
+                };
+
+                setRoundResult(normalizedResult);
+                setSelectedLocation(guessedLocation);
 
                 setStatus((prev) =>
                     prev
@@ -151,7 +188,7 @@ export default function useGameSession(sessionId) {
                               progress: {
                                   ...prev.progress,
                                   answered_rounds:
-                                      prev.progress.answered_rounds + 1,
+                                      (prev.progress?.answered_rounds ?? 0) + 1,
                               },
                               rounds: prev.rounds.map((r) =>
                                   r.id === result.round_id
@@ -161,13 +198,12 @@ export default function useGameSession(sessionId) {
                                             seconds_remaining: null,
                                             score: result.score,
                                             distance_km: result.distance_km,
-                                            timed_out: result.timed_out,
                                             correct_location:
                                                 result.correct_location,
                                             guessed_latitude:
-                                                result.guessed_latitude,
+                                                guessedLocation?.latitude ?? null,
                                             guessed_longitude:
-                                                result.guessed_longitude,
+                                                guessedLocation?.longitude ?? null,
                                         }
                                       : r
                               ),
@@ -193,6 +229,8 @@ export default function useGameSession(sessionId) {
         [round, roundResult]
     );
 
+    // ---------- Submeter palpite ----------
+
     const submitGuess = useCallback(() => {
         if (!selectedLocation) {
             toast.error("Selecciona primeiro uma localização no mapa.");
@@ -204,9 +242,11 @@ export default function useGameSession(sessionId) {
         );
     }, [selectedLocation, finishRound]);
 
-    // O tempo acabou: envia o palpite escolhido, ou fecha a ronda sem palpite.
+    // ---------- Tempo esgotado ----------
+
     const handleTimeUp = useCallback(async () => {
         if (!round || roundResult) return;
+
         if (timeUpRoundRef.current === round.id) return;
 
         timeUpRoundRef.current = round.id;
@@ -215,9 +255,10 @@ export default function useGameSession(sessionId) {
             ? await finishRound((roundId) =>
                   submitGameAnswer(roundId, selectedLocation)
               )
-            : await finishRound((roundId) => timeoutRound(roundId));
+            : await finishRound((roundId) =>
+                  timeoutRound(roundId)
+              );
 
-        // Se falhou (rede), permite nova tentativa passados 2s.
         if (!ok) {
             setTimeout(() => {
                 timeUpRoundRef.current = null;
@@ -225,18 +266,23 @@ export default function useGameSession(sessionId) {
         }
     }, [round, roundResult, selectedLocation, finishRound]);
 
-    // ---------- Avançar ----------
+    // ---------- Avançar para a próxima ronda ----------
+
     const goToNextRound = useCallback(async () => {
-        if (advancingRef.current) return;
+        if (advancingRef.current || !roundResult) return;
 
         advancingRef.current = true;
         setIsAdvancing(true);
         setAdvanceFailed(false);
 
         try {
+            // 1. Solicita ao backend o avanço da partida.
             await startNextRound(sessionId);
 
-            const fresh = await (sessionId);
+            // 2. Recupera o estado actualizado da partida.
+            const fresh = await getGameStatus(sessionId);
+
+            // 3. Actualiza o estado React.
             applyStatus(fresh);
         } catch (error) {
             console.error("Erro ao avançar:", error);
@@ -251,14 +297,21 @@ export default function useGameSession(sessionId) {
             advancingRef.current = false;
             setIsAdvancing(false);
         }
-    }, [sessionId, applyStatus]);
+    }, [sessionId, roundResult, applyStatus]);
 
-    // Handlers mais recentes, usados pelos temporizadores.
-    latestRef.current = { handleTimeUp, goToNextRound };
+    // ---------- Handlers mais recentes ----------
 
-    // ---------- Contagem decrescente da ronda ----------
+    latestRef.current = {
+        handleTimeUp,
+        goToNextRound,
+    };
+
+    // ---------- Temporizador da ronda ----------
+
     useEffect(() => {
-        if (!round || roundResult || isFinished) return undefined;
+        if (!round || roundResult || isFinished) {
+            return undefined;
+        }
 
         function tick() {
             if (deadlineRef.current == null) return;
@@ -270,24 +323,32 @@ export default function useGameSession(sessionId) {
 
             setSecondsLeft(left);
 
-            if (left <= 0) latestRef.current.handleTimeUp();
+            if (left <= 0) {
+                latestRef.current.handleTimeUp();
+            }
         }
 
         tick();
+
         const id = setInterval(tick, 250);
 
         return () => clearInterval(id);
-    }, [round?.id, roundResult, isFinished]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [round?.id, roundResult, isFinished]);
 
-    // ---------- Avanço automático depois do resultado ----------
+    // ---------- Contagem até à próxima ronda ----------
+
     useEffect(() => {
-        if (!round || !roundResult || isFinished) return undefined;
+        if (!round || !roundResult || isFinished) {
+            return undefined;
+        }
 
         let left = RESULT_DISPLAY_SECONDS;
+
         setResultCountdown(left);
 
         const id = setInterval(() => {
             left -= 1;
+
             setResultCountdown(Math.max(0, left));
 
             if (left <= 0) {
@@ -297,23 +358,23 @@ export default function useGameSession(sessionId) {
         }, 1000);
 
         return () => clearInterval(id);
-    }, [round?.id, roundResult, isFinished]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [round?.id, roundResult, isFinished]);
 
+    // ---------- Dados e acções disponibilizados à página ----------
+        
     return {
-        // dados
         round,
         rounds,
         totalRounds,
         totalScore,
         timeLimit,
+
         selectedLocation,
         roundResult,
 
-        // tempo
         secondsLeft,
         resultCountdown,
 
-        // estado
         isLoading,
         loadError,
         isSubmitting,
@@ -322,9 +383,8 @@ export default function useGameSession(sessionId) {
         isFinished,
         isLastRound,
 
-        // acções
         setSelectedLocation,
         submitGuess,
-        goToNextRound, // só usado como "tentar novamente" se o avanço falhar
+        goToNextRound,
     };
 }

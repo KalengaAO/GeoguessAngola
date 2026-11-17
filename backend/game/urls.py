@@ -1,9 +1,7 @@
 from django.urls import path
-
 from .views import (
     StartGameView,
     SubmitAnswerView,
-    TimeoutRoundView,
     NextRoundView,
     GameStatusView,
     PlayerStatsView,
@@ -17,11 +15,6 @@ urlpatterns = [
         name="submit-answer",
     ),
     path(
-        "rounds/<int:round_id>/timeout/",
-        TimeoutRoundView.as_view(),
-        name="timeout-round",
-    ),
-    path(
         "<int:session_id>/next/",
         NextRoundView.as_view(),
         name="next-round",
@@ -32,8 +25,8 @@ urlpatterns = [
         name="game-status",
     ),
     path(
-        "stats/",
-        PlayerStatsView.as_view(),
-        name="player-stats",
+    "stats/",
+    PlayerStatsView.as_view(),
+    name="player-stats",
     ),
 ]

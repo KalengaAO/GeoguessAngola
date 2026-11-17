@@ -29,3 +29,8 @@ export async function getGameStats() {
     const { data } = await api.get(`${GAME_BASE}/stats/`);
     return data;
 }
+
+export async function getGameStatus(sessionId) {
+    const { data } = await api.get(`${GAME_BASE}/${sessionId}/status/`);
+    return data;
+}
