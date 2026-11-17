@@ -1,165 +1,424 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useLocation, useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 
-import useGameSession from "../../hooks/useGameSession";
-import { startGame } from "../../services/gameService";
+import {
+    MapContainer,
+    TileLayer,
+    CircleMarker,
+    Popup,
+    Polyline,
+    useMapEvents,
+    useMap,
+} from "react-leaflet";
 
 import {
-    GameHeader,
-    GameMessage,
-    LandscapeImage,
-    GuessMap,
-    SelectionInfo,
-    RoundTimer,
-    RoundResult,
-    FinalSummary,
-} from "../../components/game";
+    submitGameAnswer,
+    startNextRound,
+} from "../../services/gameService";
 
-import "../../components/game/game.css";
+import "leaflet/dist/leaflet.css";
+import "./GamePage.css";
+
+
+function MapClickHandler({ onLocationSelect, disabled }) {
+    useMapEvents({
+        click(event) {
+            if (disabled) return;
+
+            onLocationSelect({
+                latitude: event.latlng.lat,
+                longitude: event.latlng.lng,
+            });
+        },
+    });
+
+    return null;
+}
+
+
+// Ajusta o mapa para mostrar os dois pontos.
+function ResultMapBounds({ selectedLocation, correctLocation }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!selectedLocation || !correctLocation) return;
+
+        const bounds = [
+            [
+                selectedLocation.latitude,
+                selectedLocation.longitude,
+            ],
+            [
+                correctLocation.latitude,
+                correctLocation.longitude,
+            ],
+        ];
+
+        map.fitBounds(bounds, {
+            padding: [40, 40],
+            maxZoom: 8,
+        });
+    }, [map, selectedLocation, correctLocation]);
+
+    return null;
+}
+
 
 function GamePage() {
     const { sessionId } = useParams();
-    const navigate = useNavigate();
+    const location = useLocation();
 
-    const game = useGameSession(sessionId);
+    const game = location.state?.game;
 
-    async function handlePlayAgain() {
+    const [round, setRound] = useState(game?.round ?? null);
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    const [roundResult, setRoundResult] = useState(null);
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAdvancing, setIsAdvancing] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
+
+    if (!round && !isFinished) {
+        return (
+            <main className="game-page">
+                <div className="game-page__message">
+                    <h1>Ronda indisponível</h1>
+                    <p>
+                        Não foi possível recuperar os dados desta ronda.
+                        Inicia uma nova partida a partir do teu perfil.
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
+    const correctLocation = roundResult?.correct_location;
+
+    async function handleSubmitAnswer() {
+        if (!selectedLocation) {
+            toast.error("Selecciona primeiro uma localização no mapa.");
+            return;
+        }
+
+        if (roundResult || isSubmitting) return;
+
         try {
-            const data = await startGame();
-            navigate(`/game/${data.session_id}`);
+            setIsSubmitting(true);
+
+            const result = await submitGameAnswer(
+                round.id,
+                selectedLocation
+            );
+
+            setRoundResult(result);
+
         } catch (error) {
+            console.error("Erro ao submeter resposta:", error);
+
             toast.error(
                 error.response?.data?.detail ||
-                    "Não foi possível iniciar uma nova partida."
+                "Não foi possível submeter a tua resposta."
             );
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
-    // ---------- Carregamento / erro ----------
-    if (game.isLoading) {
-        return (
-            <main className="game-page">
-                <GameMessage title="A carregar partida..." />
-            </main>
-        );
-    }
 
-    if (game.loadError || !game.round) {
-        return (
-            <main className="game-page">
-                <GameMessage
-                    title="Ronda indisponível"
-                    text="Não foi possível recuperar os dados desta partida. Inicia uma nova partida a partir do teu perfil."
-                >
-                    <Link to="/profile" className="game-page__link-button">
-                        Voltar ao perfil
-                    </Link>
-                </GameMessage>
-            </main>
-        );
-    }
+    async function handleNextRound() {
+        if (isAdvancing || !roundResult) return;
 
-    // ---------- Partida concluída ----------
-    if (game.isFinished) {
-        return (
-            <main className="game-page">
-                <GameHeader sessionId={sessionId} />
+        try {
+            setIsAdvancing(true);
 
-                <FinalSummary
-                    totalScore={game.totalScore}
-                    rounds={game.rounds}
-                    onPlayAgain={handlePlayAgain}
-                />
-            </main>
-        );
-    }
+            const data = await startNextRound(sessionId);
 
-    // ---------- Ronda em curso ----------
-    const { round, roundResult, selectedLocation } = game;
-    const hasResult = Boolean(roundResult);
+            // A partida terminou.
+            if (
+                data.session_status === "completed" ||
+                !data.round
+            ) {
+                setIsFinished(true);
+                setRoundResult(null);
+                setSelectedLocation(null);
+                return;
+            }
 
-    let countdownLabel = null;
+            // Preparar a próxima ronda.
+            setRound(data.round);
+            setSelectedLocation(null);
+            setRoundResult(null);
 
-    if (hasResult) {
-        if (game.isAdvancing) {
-            countdownLabel = "A carregar...";
-        } else if (!game.advanceFailed) {
-            countdownLabel = game.isLastRound
-                ? `Resultado final em ${game.resultCountdown}s`
-                : `Próxima ronda em ${game.resultCountdown}s`;
+        } catch (error) {
+            console.error("Erro ao avançar de ronda:", error);
+
+            toast.error(
+                error.response?.data?.detail ||
+                "Não foi possível avançar para a próxima ronda."
+            );
+        } finally {
+            setIsAdvancing(false);
         }
     }
+
+
+    if (isFinished) {
+        return (
+            <main className="game-page">
+                <header className="game-page__header">
+                    <div className="game-page__brand">
+                        <Link to="/profile">
+                            <span>GEOGUESS</span> ANGOLA
+                        </Link>
+                    </div>
+                </header>
+
+                <section className="game-page__content">
+                    <div className="game-page__result">
+                        <h1>Partida concluída!</h1>
+
+                        <p>
+                            Terminaste todas as rondas.
+                        </p>
+
+                        <Link
+                            to="/profile"
+                            className="game-page__submit-button"
+                        >
+                            Voltar ao perfil
+                        </Link>
+                    </div>
+                </section>
+            </main>
+        );
+    }
+
 
     return (
         <main className="game-page">
-            <GameHeader
-                sessionId={sessionId}
-                roundNumber={round.number}
-                totalRounds={game.totalRounds}
-                totalScore={game.totalScore}
-            />
+            <header className="game-page__header">
+                <div className="game-page__brand">
+                    <Link to="/profile">
+                        <span>GEOGUESS</span> ANGOLA
+                    </Link>
+                </div>
+
+                <div className="game-page__round-info">
+                    <span>Partida {sessionId}</span>
+                    <span>Ronda {round.number}</span>
+                </div>
+            </header>
+
 
             <section className="game-page__content">
-                <LandscapeImage imageUrl={round.image_url} />
+
+                <div className="game-page__landscape">
+                    <div className="game-page__section-heading">
+                        <h1>Onde fica este lugar?</h1>
+
+                        <p>
+                            Observa a paisagem e identifica a sua localização
+                            no mapa de Angola.
+                        </p>
+                    </div>
+
+                    <div className="game-page__image-container">
+                        <img
+                            src={round.image_url}
+                            alt="Paisagem angolana para identificação geográfica"
+                            className="game-page__image"
+                        />
+                    </div>
+                </div>
+
 
                 <div className="game-page__map-section">
+
                     <div className="game-page__map-heading">
                         <h2>
-                            {hasResult
+                            {roundResult
                                 ? "Comparação das localizações"
                                 : "Selecciona a localização"}
                         </h2>
 
                         <p>
-                            {hasResult
+                            {roundResult
                                 ? "Compara o teu palpite com a localização verdadeira."
                                 : "Clica no mapa para colocar o teu marcador."}
                         </p>
                     </div>
 
-                    {!hasResult && (
-                        <RoundTimer
-                            secondsLeft={game.secondsLeft}
-                            totalSeconds={game.timeLimit}
-                        />
+
+                    <div className="game-page__map">
+                        <MapContainer
+                            center={[-12.5, 18.5]}
+                            zoom={5}
+                            scrollWheelZoom
+                            className="game-page__leaflet"
+                        >
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+
+                            <MapClickHandler
+                                onLocationSelect={setSelectedLocation}
+                                disabled={
+                                    Boolean(roundResult) || isSubmitting
+                                }
+                            />
+
+
+                            {selectedLocation && (
+                                <CircleMarker
+                                    center={[
+                                        selectedLocation.latitude,
+                                        selectedLocation.longitude,
+                                    ]}
+                                    radius={9}
+                                    pathOptions={{
+                                        color: "#FFFFFF",
+                                        fillColor: "#FFC629",
+                                        fillOpacity: 1,
+                                    }}
+                                >
+                                    <Popup>
+                                        Localização escolhida
+                                    </Popup>
+                                </CircleMarker>
+                            )}
+
+
+                            {correctLocation && (
+                                <CircleMarker
+                                    center={[
+                                        correctLocation.latitude,
+                                        correctLocation.longitude,
+                                    ]}
+                                    radius={9}
+                                    pathOptions={{
+                                        color: "#FFFFFF",
+                                        fillColor: "#16A34A",
+                                        fillOpacity: 1,
+                                    }}
+                                >
+                                    <Popup>
+                                        Localização verdadeira
+                                    </Popup>
+                                </CircleMarker>
+                            )}
+
+
+                            {selectedLocation && correctLocation && (
+                                <>
+                                    <Polyline
+                                        positions={[
+                                            [
+                                                selectedLocation.latitude,
+                                                selectedLocation.longitude,
+                                            ],
+                                            [
+                                                correctLocation.latitude,
+                                                correctLocation.longitude,
+                                            ],
+                                        ]}
+                                        pathOptions={{
+                                            color: "#FFC629",
+                                            weight: 3,
+                                            dashArray: "8 8",
+                                        }}
+                                    />
+
+                                    <ResultMapBounds
+                                        selectedLocation={selectedLocation}
+                                        correctLocation={correctLocation}
+                                    />
+                                </>
+                            )}
+                        </MapContainer>
+                    </div>
+
+
+                    {selectedLocation && (
+                        <div className="game-page__selection">
+                            <span>Localização seleccionada</span>
+
+                            <p>
+                                Latitude: {selectedLocation.latitude.toFixed(6)}
+                            </p>
+
+                            <p>
+                                Longitude: {selectedLocation.longitude.toFixed(6)}
+                            </p>
+                        </div>
                     )}
 
-                    <GuessMap
-                        mapKey={round.id}
-                        selectedLocation={selectedLocation}
-                        correctLocation={roundResult?.correct_location}
-                        onSelect={game.setSelectedLocation}
-                        disabled={hasResult || game.isSubmitting}
-                    />
 
-                    {!hasResult && (
-                        <>
-                            <SelectionInfo location={selectedLocation} />
+                    {!roundResult && (
+                        <button
+                            type="button"
+                            className="game-page__submit-button"
+                            onClick={handleSubmitAnswer}
+                            disabled={!selectedLocation || isSubmitting}
+                        >
+                            {isSubmitting
+                                ? "A submeter..."
+                                : "Confirmar localização"}
+                        </button>
+                    )}
+
+
+                    {roundResult && (
+                        <div className="game-page__result">
+                            <h2>Resultado da ronda</h2>
+
+                            <div className="game-page__result-stats">
+                                <div>
+                                    <span>Distância</span>
+                                    <strong>
+                                        {roundResult.distance_km} km
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>Pontuação</span>
+                                    <strong>
+                                        {roundResult.score} pontos
+                                    </strong>
+                                </div>
+                            </div>
+
+
+                            {correctLocation && (
+                                <div className="game-page__map-legend">
+                                    <span>
+                                        <i className="guess-marker" />
+                                        O teu palpite
+                                    </span>
+
+                                    <span>
+                                        <i className="correct-marker" />
+                                        Localização verdadeira
+                                    </span>
+                                </div>
+                            )}
+
 
                             <button
                                 type="button"
-                                className="game-page__submit-button"
-                                onClick={game.submitGuess}
-                                disabled={
-                                    !selectedLocation || game.isSubmitting
-                                }
+                                className="game-page__submit-button game-page__next-button"
+                                onClick={handleNextRound}
+                                disabled={isAdvancing}
                             >
-                                {game.isSubmitting
-                                    ? "A submeter..."
-                                    : "Confirmar localização"}
+                                {isAdvancing
+                                    ? "A carregar..."
+                                    : "Próxima ronda"}
                             </button>
-                        </>
+                        </div>
                     )}
 
-                    <RoundResult
-                        result={roundResult}
-                        countdownLabel={countdownLabel}
-                        onAction={
-                            game.advanceFailed ? game.goToNextRound : undefined
-                        }
-                        actionLabel="Tentar novamente"
-                        actionDisabled={game.isAdvancing}
-                    />
                 </div>
             </section>
         </main>

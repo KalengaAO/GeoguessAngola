@@ -1,6 +1,5 @@
-import api from "./api"; // <- ajusta para a tua instância do axios
+import api from "./api";
 
-// Prefixo onde incluíste o urls.py desta app (ex.: path("api/game/", include(...))).
 const GAME_BASE = "/game";
 
 export async function startGame() {
@@ -8,23 +7,14 @@ export async function startGame() {
     return data;
 }
 
-export async function getGameStats(sessionId) {
-    const { data } = await api.get(`${GAME_BASE}/${sessionId}/status/`);
-    return data;
-}
-
 export async function submitGameAnswer(roundId, location) {
-    const { data } = await api.post(
-        `${GAME_BASE}/rounds/${roundId}/answer/`,
-        {
-            latitude: location.latitude,
-            longitude: location.longitude,
-        }
-    );
+    const { data } = await api.post(`${GAME_BASE}/rounds/${roundId}/answer/`, {
+        latitude: location.latitude,
+        longitude: location.longitude,
+    });
     return data;
 }
 
-// O tempo acabou e o jogador não escolheu nenhuma localização.
 export async function timeoutRound(roundId) {
     const { data } = await api.post(`${GAME_BASE}/rounds/${roundId}/timeout/`);
     return data;
@@ -35,7 +25,12 @@ export async function startNextRound(sessionId) {
     return data;
 }
 
-export async function getPlayerStats() {
+export async function getGameStats() {
     const { data } = await api.get(`${GAME_BASE}/stats/`);
+    return data;
+}
+
+export async function getGameStatus(sessionId) {
+    const { data } = await api.get(`${GAME_BASE}/${sessionId}/status/`);
     return data;
 }
