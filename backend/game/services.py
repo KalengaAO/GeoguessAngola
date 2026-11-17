@@ -56,13 +56,23 @@ def calculate_distance_km(lat1, lon1, lat2, lon2):
 def calculate_score(distance_km):
     return max(0, round(5000 * (1 - distance_km / 500)))
 
+
 @transaction.atomic
-def submit_round_answer(game_round_id, user, guessed_latitude, guessed_longitude):
+def submit_round_answer(
+    game_round_id,
+    user,
+    guessed_latitude,
+    guessed_longitude,
+):
+    """Regista o palpite e devolve os dados das duas localizações."""
     game_round = (
         GameRound.objects
         .select_for_update()
         .select_related("session", "image__location")
-        .get(pk=game_round_id, session__user=user)
+        .get(
+            pk=game_round_id,
+            session__user=user,
+        )
     )
 
     if game_round.answered_at is not None:
@@ -93,6 +103,7 @@ def submit_round_answer(game_round_id, user, guessed_latitude, guessed_longitude
     game_round.guessed_longitude = guessed_longitude
     game_round.score = calculate_score(distance_km)
     game_round.answered_at = timezone.now()
+
     game_round.save(
         update_fields=[
             "guessed_latitude",
@@ -102,7 +113,13 @@ def submit_round_answer(game_round_id, user, guessed_latitude, guessed_longitude
         ]
     )
 
-    return game_round, distance_km
+    correct_location = {
+        "latitude": float(location.latitude),
+        "longitude": float(location.longitude),
+    }
+
+    return game_round, distance_km, correct_location
+
 
 @transaction.atomic
 def advance_game(session_id, user):

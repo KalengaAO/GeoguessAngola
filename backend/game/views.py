@@ -1,14 +1,12 @@
-from django.shortcuts import render
+
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .models import GameRound
+from .models import GameRound, GameSession, PlayerStats
 from .serializers import SubmitAnswerSerializer, PlayerStatsSerializer
 from .services import submit_round_answer, start_game, advance_game
-from .models import GameSession, PlayerStats
-from django.conf import settings
-from django.db.models import Sum, Count
 
 
 class StartGameView(APIView):
@@ -54,12 +52,19 @@ class SubmitAnswerView(APIView):
             )
 
         try:
-            game_round, distance_km = submit_round_answer(
-                game_round_id=round_id,
-                user=request.user,
-                guessed_latitude=serializer.validated_data["latitude"],
-                guessed_longitude=serializer.validated_data["longitude"],
+            game_round, distance_km, correct_location = (
+                submit_round_answer(
+                    game_round_id=round_id,
+                    user=request.user,
+                    guessed_latitude=serializer.validated_data["latitude"],
+                    guessed_longitude=serializer.validated_data["longitude"],
+                )
             )
+
+            guessed_location = {
+                "latitude": game_round.guessed_latitude,
+                "longitude": game_round.guessed_longitude,
+            }
 
             return Response(
                 {
@@ -67,6 +72,8 @@ class SubmitAnswerView(APIView):
                     "round_number": game_round.round_number,
                     "distance_km": round(distance_km, 2),
                     "score": game_round.score,
+                    "guessed_location": guessed_location,
+                    "correct_location": correct_location,
                 },
                 status=status.HTTP_200_OK,
             )
