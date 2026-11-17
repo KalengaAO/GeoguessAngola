@@ -210,6 +210,27 @@ def get_room_match(user, room_code):
     return match
 
 
+def get_room_lobby(user, room_code):
+    try:
+        room = GameRoom.objects.prefetch_related(
+            "participants__user",
+        ).select_related(
+            "host",
+        ).get(code=room_code.upper())
+    except GameRoom.DoesNotExist:
+        raise ValueError("Sala não encontrada.")
+
+    is_participant = room.participants.filter(
+        user=user,
+        is_active=True,
+    ).exists()
+
+    if not is_participant:
+        raise ValueError("Não és um participante activo nesta sala.")
+
+    return room
+
+
 
 
 @transaction.atomic

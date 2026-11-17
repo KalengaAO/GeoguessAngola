@@ -7,7 +7,7 @@ from rest_framework import status
 from .services import (
         create_room, join_room, 
         set_player_ready, start_match,
-        get_room_match, submit_multiplayer_guess,
+        get_room_lobby, get_room_match, submit_multiplayer_guess,
         get_match_results,
     )
 
@@ -127,6 +127,43 @@ class StartMatchView(APIView):
                 "message": "Partida iniciada com sucesso.",
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+class RoomLobbyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, room_code):
+        try:
+            room = get_room_lobby(
+                user=request.user,
+                room_code=room_code,
+            )
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        match = getattr(room, "match", None)
+        participants = room.participants.filter(
+            is_active=True,
+        ).select_related("user")
+
+        return Response(
+            {
+                "id": room.id,
+                "code": room.code,
+                "status": room.status,
+                "max_players": room.max_players,
+                "host_username": room.host.username,
+                "match_id": match.id if match else None,
+                "participants": RoomParticipantSerializer(
+                    participants,
+                    many=True,
+                ).data,
+            },
+            status=status.HTTP_200_OK,
         )
 
 

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.db.models import Q
 from django.db.models import QuerySet
 from django.conf import settings
@@ -88,6 +89,7 @@ class GameRound(models.Model):
     )
     score = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(default=timezone.now)
     answered_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:

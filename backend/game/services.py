@@ -81,6 +81,14 @@ def submit_round_answer(
     if game_round.session.status != GameSession.Status.IN_PROGRESS:
         raise ValueError("Esta partida já não está em andamento.")
 
+    answer_deadline = (
+        settings.ROUND_TIME_SECONDS + settings.ROUND_TIME_GRACE_SECONDS
+    )
+    elapsed_seconds = (timezone.now() - game_round.started_at).total_seconds()
+
+    if elapsed_seconds > answer_deadline:
+        raise ValueError("O tempo para responder a esta ronda terminou.")
+
     guessed_latitude = float(guessed_latitude)
     guessed_longitude = float(guessed_longitude)
 
@@ -122,12 +130,54 @@ def submit_round_answer(
 
 
 @transaction.atomic
+def timeout_round(game_round_id, user):
+    game_round = (
+        GameRound.objects
+        .select_for_update()
+        .select_related("session", "image__location")
+        .get(
+            pk=game_round_id,
+            session__user=user,
+        )
+    )
+
+    if (
+        game_round.answered_at is not None
+        and game_round.guessed_latitude is None
+        and game_round.guessed_longitude is None
+        and game_round.score == 0
+    ):
+        return game_round
+
+    if game_round.answered_at is not None:
+        raise ValueError("Esta ronda já foi concluída.")
+
+    if game_round.session.status != GameSession.Status.IN_PROGRESS:
+        raise ValueError("Esta partida já não está em andamento.")
+
+    timeout_after = settings.ROUND_TIME_SECONDS
+    elapsed_seconds = (timezone.now() - game_round.started_at).total_seconds()
+
+    if elapsed_seconds < timeout_after:
+        raise ValueError("A ronda ainda está dentro do tempo permitido.")
+
+    game_round.score = 0
+    game_round.answered_at = timezone.now()
+    game_round.save(update_fields=["score", "answered_at"])
+
+    return game_round
+
+
+@transaction.atomic
 def advance_game(session_id, user):
     session = (
         GameSession.objects
         .select_for_update()
         .get(pk=session_id, user=user)
     )
+
+    if session.status == GameSession.Status.COMPLETED:
+        return session, None
 
     if session.status != GameSession.Status.IN_PROGRESS:
         raise ValueError("Esta partida já não está em andamento.")

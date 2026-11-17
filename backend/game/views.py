@@ -1,12 +1,19 @@
 
 from django.conf import settings
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import GameRound, GameSession, PlayerStats
 from .serializers import SubmitAnswerSerializer, PlayerStatsSerializer
-from .services import submit_round_answer, start_game, advance_game
+from .services import (
+    advance_game,
+    calculate_distance_km,
+    start_game,
+    submit_round_answer,
+    timeout_round,
+)
 
 
 class StartGameView(APIView):
@@ -28,6 +35,9 @@ class StartGameView(APIView):
                         "id": game_round.id,
                         "number": game_round.round_number,
                         "image_url": image_url,
+                        "started_at": game_round.started_at,
+                        "time_limit_seconds": settings.ROUND_TIME_SECONDS,
+                        "grace_seconds": settings.ROUND_TIME_GRACE_SECONDS,
                     },
                 },
                 status=status.HTTP_201_CREATED,
@@ -91,6 +101,41 @@ class SubmitAnswerView(APIView):
             )
 
 
+class TimeoutRoundView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, round_id):
+        try:
+            game_round = timeout_round(
+                game_round_id=round_id,
+                user=request.user,
+            )
+        except GameRound.DoesNotExist:
+            return Response(
+                {"detail": "Ronda não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "round_id": game_round.id,
+                "round_number": game_round.round_number,
+                "score": game_round.score,
+                "timed_out": True,
+                "correct_location": {
+                    "latitude": float(game_round.image.location.latitude),
+                    "longitude": float(game_round.image.location.longitude),
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class NextRoundView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -125,6 +170,9 @@ class NextRoundView(APIView):
                         "id": next_round.id,
                         "number": next_round.round_number,
                         "image_url": image_url,
+                        "started_at": next_round.started_at,
+                        "time_limit_seconds": settings.ROUND_TIME_SECONDS,
+                        "grace_seconds": settings.ROUND_TIME_GRACE_SECONDS,
                     },
                 },
                 status=status.HTTP_200_OK,
@@ -153,7 +201,7 @@ class GameStatusView(APIView):
             )
 
             rounds = session.rounds.select_related(
-                "image"
+                "image__location"
             ).order_by("round_number")
 
             rounds_data = []
@@ -170,13 +218,59 @@ class GameStatusView(APIView):
                 image_url = request.build_absolute_uri(
                     game_round.image.image.url
                 )
+                elapsed_seconds = (
+                    timezone.now() - game_round.started_at
+                ).total_seconds()
+                seconds_remaining = max(
+                    0,
+                    settings.ROUND_TIME_SECONDS - elapsed_seconds,
+                )
+                location = game_round.image.location
+                guessed_location = (
+                    (
+                        float(game_round.guessed_latitude),
+                        float(game_round.guessed_longitude),
+                    )
+                    if is_answered
+                    and game_round.guessed_latitude is not None
+                    and game_round.guessed_longitude is not None
+                    else None
+                )
+                distance_km = (
+                    calculate_distance_km(
+                        float(location.latitude),
+                        float(location.longitude),
+                        guessed_location[0],
+                        guessed_location[1],
+                    )
+                    if guessed_location
+                    else None
+                )
 
                 rounds_data.append({
                     "id": game_round.id,
                     "number": game_round.round_number,
                     "image_url": image_url,
+                    "started_at": game_round.started_at,
+                    "seconds_remaining": (
+                        None if is_answered else seconds_remaining
+                    ),
                     "is_answered": is_answered,
                     "score": game_round.score if is_answered else None,
+                    "distance_km": (
+                        round(distance_km, 2)
+                        if distance_km is not None
+                        else None
+                    ),
+                    "correct_location": (
+                        {
+                            "latitude": float(location.latitude),
+                            "longitude": float(location.longitude),
+                        }
+                        if is_answered
+                        else None
+                    ),
+                    "timed_out": is_answered and guessed_location is None,
                     "guessed_latitude": (
                         game_round.guessed_latitude if is_answered else None
                     ),
@@ -193,6 +287,8 @@ class GameStatusView(APIView):
                         "answered_rounds": answered_rounds,
                         "total_rounds": settings.ROUNDS_PER_GAME,
                     },
+                    "time_limit_seconds": settings.ROUND_TIME_SECONDS,
+                    "grace_seconds": settings.ROUND_TIME_GRACE_SECONDS,
                     "total_score": total_score,
                     "rounds": rounds_data,
                 },
@@ -216,3 +312,35 @@ class PlayerStatsView(APIView):
         serializer = PlayerStatsSerializer(stats)
 
         return Response(serializer.data)
+
+
+class LeaderboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        players = (
+            PlayerStats.objects
+            .filter(games_played__gt=0)
+            .select_related("user")
+            .order_by(
+                "-total_score",
+                "-best_score",
+                "user__username",
+            )[:100]
+        )
+
+        return Response(
+            {
+                "results": [
+                    {
+                        "rank": rank,
+                        "username": player.user.username,
+                        "total_score": player.total_score,
+                        "best_score": player.best_score,
+                        "games_played": player.games_played,
+                    }
+                    for rank, player in enumerate(players, start=1)
+                ]
+            },
+            status=status.HTTP_200_OK,
+        )

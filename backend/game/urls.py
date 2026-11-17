@@ -2,17 +2,25 @@ from django.urls import path
 from .views import (
     StartGameView,
     SubmitAnswerView,
+    TimeoutRoundView,
     NextRoundView,
     GameStatusView,
     PlayerStatsView,
+    LeaderboardView,
 )
 
 urlpatterns = [
     path("start/", StartGameView.as_view(), name="start_game"),
+    path("leaderboard/", LeaderboardView.as_view(), name="leaderboard"),
     path(
         "rounds/<int:round_id>/answer/",
         SubmitAnswerView.as_view(),
         name="submit-answer",
+    ),
+    path(
+        "rounds/<int:round_id>/timeout/",
+        TimeoutRoundView.as_view(),
+        name="timeout-round",
     ),
     path(
         "<int:session_id>/next/",

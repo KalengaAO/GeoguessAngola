@@ -133,6 +133,10 @@ class MultiplayerMatchDetailSerializer(serializers.ModelSerializer):
         source="room.code",
         read_only=True,
     )
+    host_username = serializers.CharField(
+        source="room.host.username",
+        read_only=True,
+    )
     rounds = MultiplayerRoundSerializer(many=True, read_only=True)
     participants = serializers.SerializerMethodField()
 
@@ -141,6 +145,7 @@ class MultiplayerMatchDetailSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "room_code",
+            "host_username",
             "status",
             "started_at",
             "finished_at",
