@@ -14,14 +14,14 @@ urlpatterns = [
     path("api/multiplayer/", include("multiplayer.urls")),
     path("api/quiz/", include("quiz.urls")),
     path(
-        "api/token/",
+        "api/login/",
         TokenObtainPairView.as_view(),
-        name="token_obtain_pair",
+        name="login_obtain_pair",
     ),
     path(
-        "api/token/refresh/",
+        "api/login/refresh/",
         TokenRefreshView.as_view(),
-        name="token_refresh",
+        name="login_refresh",
     ),
 ]
 

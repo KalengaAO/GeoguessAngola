@@ -1,13 +1,19 @@
+
 import { Route, Routes } from "react-router-dom";
+
 import HomePage from "../pages/public/HomePage";
 import NotFoundPage from "../pages/public/NotFoundPage";
+
 import ProfilePage from "../pages/private/ProfilePage";
+import GamePage from "../pages/private/GamePage";
+
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 
 function Router() {
     return (
         <Routes>
+            {/* Public routes */}
             <Route
                 path="/"
                 element={
@@ -16,6 +22,7 @@ function Router() {
                     </PublicRoute>
                 }
             />
+
             <Route
                 path="/login"
                 element={
@@ -24,6 +31,7 @@ function Router() {
                     </PublicRoute>
                 }
             />
+
             <Route
                 path="/register"
                 element={
@@ -32,10 +40,25 @@ function Router() {
                     </PublicRoute>
                 }
             />
+
+            {/* Private routes */}
             <Route element={<PrivateRoute />}>
-                <Route path="/profile" element={<ProfilePage />} />
+                <Route
+                    path="/profile"
+                    element={<ProfilePage />}
+                />
+
+                <Route
+                    path="/game/:sessionId"
+                    element={<GamePage />}
+                />
             </Route>
-            <Route path="*" element={<NotFoundPage />} />
+
+            {/* Fallback */}
+            <Route
+                path="*"
+                element={<NotFoundPage />}
+            />
         </Routes>
     );
 }

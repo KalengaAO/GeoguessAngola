@@ -60,7 +60,7 @@ api.interceptors.response.use(
         // Não tentar renovar tokens em pedidos de autenticação.
         const url = originalRequest.url ?? "";
 
-        if (url.includes("/token/") || url.includes("/register/")) {
+        if (url.includes("/login/") || url.includes("/register/")) {
             return Promise.reject(error);
         }
 
@@ -79,7 +79,7 @@ api.interceptors.response.use(
             // Reutiliza uma renovação que já esteja em andamento.
             if (!refreshPromise) {
                 refreshPromise = refreshClient
-                    .post("/token/refresh/", {
+                    .post("/login/refresh/", {
                         refresh: refreshToken,
                     })
                     .then((response) => {

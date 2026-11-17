@@ -14,7 +14,7 @@ export async function registerUser(userData) {
 
 // Autenticação
 export async function loginUser(credentials) {
-    const response = await api.post("/token/", credentials);
+    const response = await api.post("/login/", credentials);
 
     const { access, refresh } = response.data;
 
