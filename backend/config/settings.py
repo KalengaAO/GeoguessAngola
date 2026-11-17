@@ -162,6 +162,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # rondas por jogo
 ROUNDS_PER_GAME = 5
 
+# time to play by rounds
+ROUND_TIME_SECONDS = 30
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
