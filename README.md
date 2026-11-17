@@ -63,3 +63,24 @@ Todas as rotas requerem autenticação JWT (`Bearer Token`).
 | POST | `/start/` | Inicia uma nova partida e cria a primeira ronda. |
 | POST | `/rounds/{round_id}/answer/` | Submete a localização escolhida pelo jogador e calcula a distância e pontuação. |
 
+
+## Quiz API
+
+Base URL: `/api/quiz/`
+
+Todas as rotas requerem autenticação JWT (`Bearer Token`). Cada pergunta
+disponibiliza quatro opções de resposta.
+
+| Método | Endpoint | Descrição |
+|:---:|---|---|
+| POST | `/sessions/` | Inicia um quiz para o utilizador autenticado. Apenas um quiz pode estar activo por utilizador. |
+| POST | `/sessions/{session_id}/end/` | Encerra o quiz activo do utilizador. |
+| GET | `/sessions/{session_id}/questions/` | Lista as perguntas activas e as respectivas opções. |
+| GET | `/sessions/{session_id}/questions/{question_id}/` | Consulta uma pergunta específica da sessão activa. |
+| POST | `/sessions/{session_id}/questions/{question_id}/answer/` | Submete uma resposta através de `{"option_id": id}`, regista a resposta e actualiza a pontuação. |
+
+Cada resposta correcta vale 100 pontos. Uma pergunta só pode ser respondida uma
+vez por sessão. As respostas de sessão incluem `answered_questions`,
+`total_questions`, `score` e `percentage`. A sessão é concluída automaticamente
+quando todas as perguntas activas forem respondidas.
+

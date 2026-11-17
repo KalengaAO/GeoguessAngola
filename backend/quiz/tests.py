@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
-from .models import QuizOption, QuizQuestion, QuizSession
+from .models import QuizAnswer, QuizOption, QuizQuestion, QuizSession
 
 
 class QuizApiTests(APITestCase):
@@ -10,6 +10,7 @@ class QuizApiTests(APITestCase):
             username="quiz-player",
             password="strong-password",
         )
+        QuizQuestion.objects.update(is_active=False)
         self.question = QuizQuestion.objects.create(
             question="Qual é a capital de Angola?",
             category=QuizQuestion.Category.PROVINCE,
@@ -45,6 +46,7 @@ class QuizApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data[0]["options"]), 4)
         self.assertNotIn("is_correct", response.data[0]["options"][0])
+        self.assertEqual(response.data[0]["options"][0]["order"], 1)
 
     def test_answer_returns_result_for_option_from_question(self):
         self.client.force_authenticate(self.user)
@@ -58,6 +60,19 @@ class QuizApiTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data["is_correct"])
+        self.assertEqual(response.data["score"], 100)
+        self.assertEqual(response.data["session"]["progress"]["score"], 100)
+        self.assertEqual(
+            QuizAnswer.objects.filter(session=session).count(),
+            1,
+        )
+
+        repeated_response = self.client.post(
+            f"/api/quiz/sessions/{session.id}/questions/"
+            f"{self.question.id}/answer/",
+            {"option_id": self.options[0].id},
+        )
+        self.assertEqual(repeated_response.status_code, 404)
 
     def test_answer_rejects_option_from_another_question(self):
         other_question = QuizQuestion.objects.create(
@@ -80,6 +95,19 @@ class QuizApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_session_completes_after_all_questions_are_answered(self):
+        self.client.force_authenticate(self.user)
+        session = QuizSession.objects.create(user=self.user)
+
+        response = self.client.post(
+            f"/api/quiz/sessions/{session.id}/questions/"
+            f"{self.question.id}/answer/",
+            {"option_id": self.options[0].id},
+        )
+
+        self.assertEqual(response.data["session"]["status"], "completed")
+        self.assertEqual(response.data["session"]["progress"]["percentage"], 100.0)
 
     def test_user_cannot_start_two_active_quizzes(self):
         self.client.force_authenticate(self.user)

@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -5,11 +6,42 @@ from rest_framework.views import APIView
 
 from django.utils import timezone
 
-from .models import QuizQuestion, QuizSession
+from .models import QuizAnswer, QuizQuestion, QuizSession
 from .serializers import (
+    QuizProgressSerializer,
     QuizQuestionSerializer,
     SubmitQuizAnswerSerializer,
 )
+
+
+def get_progress(session):
+    total_questions = QuizQuestion.objects.filter(is_active=True).count()
+    answered_questions = session.answers.count()
+    percentage = (
+        round((session.score / (total_questions * 100)) * 100, 2)
+        if total_questions
+        else 0
+    )
+
+    return QuizProgressSerializer(
+        {
+            "answered_questions": answered_questions,
+            "total_questions": total_questions,
+            "score": session.score,
+            "percentage": percentage,
+        },
+    ).data
+
+
+def session_response(session):
+    return {
+        "session_id": session.id,
+        "status": session.status,
+        "score": session.score,
+        "progress": get_progress(session),
+        "started_at": session.started_at,
+        "ended_at": session.ended_at,
+    }
 
 
 class StartQuizSessionView(APIView):
@@ -28,11 +60,7 @@ class StartQuizSessionView(APIView):
         session = QuizSession.objects.create(user=request.user)
 
         return Response(
-            {
-                "session_id": session.id,
-                "status": session.status,
-                "started_at": session.started_at,
-            },
+            session_response(session),
             status=status.HTTP_201_CREATED,
         )
 
@@ -58,11 +86,7 @@ class EndQuizSessionView(APIView):
         session.save(update_fields=["status", "ended_at"])
 
         return Response(
-            {
-                "session_id": session.id,
-                "status": session.status,
-                "ended_at": session.ended_at,
-            },
+            session_response(session),
             status=status.HTTP_200_OK,
         )
 
@@ -129,7 +153,9 @@ class SubmitQuizAnswerView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, session_id, question_id):
-        if get_active_session(session_id, request.user) is None:
+        session = get_active_session(session_id, request.user)
+
+        if session is None:
             return Response(
                 {"detail": "Quiz activo não encontrado."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -157,15 +183,55 @@ class SubmitQuizAnswerView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if QuizAnswer.objects.filter(
+            session=session,
+            question=question,
+        ).exists():
+            return Response(
+                {"detail": "Esta pergunta já foi respondida neste quiz."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        is_correct = option.is_correct
+        answer_score = 100 if is_correct else 0
         correct_option = question.options.get(is_correct=True)
+
+        with transaction.atomic():
+            QuizAnswer.objects.create(
+                session=session,
+                question=question,
+                option=option,
+                is_correct=is_correct,
+                score=answer_score,
+            )
+            session.score += answer_score
+
+            total_questions = QuizQuestion.objects.filter(
+                is_active=True,
+            ).count()
+            answered_questions = session.answers.count()
+
+            if answered_questions >= total_questions:
+                session.status = QuizSession.Status.COMPLETED
+                session.ended_at = timezone.now()
+
+            session.save(
+                update_fields=[
+                    "score",
+                    "status",
+                    "ended_at",
+                ],
+            )
 
         return Response(
             {
                 "question_id": question.id,
                 "selected_option_id": option.id,
-                "is_correct": option.is_correct,
+                "is_correct": is_correct,
+                "score": answer_score,
                 "correct_option_id": correct_option.id,
                 "explanation": question.explanation,
+                "session": session_response(session),
             },
             status=status.HTTP_200_OK,
         )
