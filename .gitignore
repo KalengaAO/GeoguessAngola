@@ -1,4 +1,5 @@
 *.pyc
 geoguess_venv
+/gg
 BACKEND.md
 .github
