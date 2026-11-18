@@ -199,6 +199,21 @@ def leave_room(user, room_code):
             room.host = replacement.user
             room.save(update_fields=["host"])
 
+        try:
+            match = room.match
+            if match.status == MultiplayerMatch.Status.IN_PROGRESS:
+                active_round = (
+                    match.rounds
+                    .select_for_update()
+                    .filter(status=MultiplayerRound.Status.ACTIVE)
+                    .order_by("-round_number")
+                    .first()
+                )
+                if active_round is not None:
+                    complete_round_if_ready(active_round)
+        except MultiplayerMatch.DoesNotExist:
+            pass
+
         return room
 
     participant.is_active = False

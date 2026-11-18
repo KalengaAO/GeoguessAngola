@@ -9,6 +9,7 @@ from .services import create_room
 from game.models import GeoLocation, LocationImage
 from .models import (
     MultiplayerMatch,
+    MultiplayerGuess,
     MultiplayerRound,
 )
 from .services import join_room
@@ -76,6 +77,56 @@ class MultiplayerRoomApiTests(TestCase):
                 user=player,
                 is_active=False,
             ).exists()
+        )
+
+    def test_leave_completes_round_when_remaining_players_finished(self):
+        room = create_room(self.host)
+        player = User.objects.create_user(
+            username="player",
+            password="password123",
+        )
+        join_room(player, room.code)
+
+        location = GeoLocation.objects.create(
+            name="Luanda",
+            province="Luanda",
+            latitude=-8.838333,
+            longitude=13.234444,
+        )
+        image = LocationImage.objects.create(
+            location=location,
+            image="locations/test.jpg",
+        )
+        room.status = "in_progress"
+        room.save(update_fields=["status"])
+        match = MultiplayerMatch.objects.create(room=room)
+        multiplayer_round = MultiplayerRound.objects.create(
+            match=match,
+            image=image,
+            round_number=1,
+        )
+
+        host_participant = room.participants.get(user=self.host)
+        MultiplayerGuess.objects.create(
+            round=multiplayer_round,
+            participant=host_participant,
+            guessed_latitude=-8.838333,
+            guessed_longitude=13.234444,
+            distance_km=0,
+            score=5000,
+        )
+
+        self.client.force_authenticate(player)
+        response = self.client.post(
+            "/api/multiplayer/rooms/leave/",
+            {"code": room.code},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        multiplayer_round.refresh_from_db()
+        self.assertEqual(
+            multiplayer_round.status,
+            MultiplayerRound.Status.COMPLETED,
         )
 
     def test_timeout_completes_expired_round(self):
