@@ -96,6 +96,65 @@ class QuizApiTests(APITestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_duplicate_answer_is_rejected_even_with_another_option(self):
+        second_question = QuizQuestion.objects.create(
+            question="Qual é a maior província de Angola?",
+            category=QuizQuestion.Category.PROVINCE,
+            province="Moxico",
+        )
+        first_option = QuizOption.objects.create(
+            question=second_question,
+            text="Luanda",
+            order=1,
+            is_correct=False,
+        )
+        QuizOption.objects.create(
+            question=second_question,
+            text="Moxico",
+            order=2,
+            is_correct=True,
+        )
+        QuizOption.objects.create(
+            question=second_question,
+            text="Bié",
+            order=3,
+            is_correct=False,
+        )
+        QuizOption.objects.create(
+            question=second_question,
+            text="Cuando Cubango",
+            order=4,
+            is_correct=False,
+        )
+
+        self.client.force_authenticate(self.user)
+        session = QuizSession.objects.create(user=self.user)
+
+        first_response = self.client.post(
+            f"/api/quiz/sessions/{session.id}/questions/"
+            f"{self.question.id}/answer/",
+            {"option_id": self.options[0].id},
+        )
+        self.assertEqual(first_response.status_code, 200)
+
+        duplicate_response = self.client.post(
+            f"/api/quiz/sessions/{session.id}/questions/"
+            f"{self.question.id}/answer/",
+            {"option_id": self.options[1].id},
+        )
+        self.assertEqual(duplicate_response.status_code, 400)
+        self.assertEqual(
+            duplicate_response.data["detail"],
+            "Esta pergunta já foi respondida neste quiz.",
+        )
+
+        second_question_response = self.client.post(
+            f"/api/quiz/sessions/{session.id}/questions/"
+            f"{second_question.id}/answer/",
+            {"option_id": first_option.id},
+        )
+        self.assertEqual(second_question_response.status_code, 200)
+
     def test_session_completes_after_all_questions_are_answered(self):
         self.client.force_authenticate(self.user)
         session = QuizSession.objects.create(user=self.user)
