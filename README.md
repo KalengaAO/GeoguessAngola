@@ -50,6 +50,12 @@ Todas as rotas protegidas requerem autenticação JWT (`Bearer Token`).
 | POST | `/token/` | Autentica o utilizador e fornece os tokens JWT. |
 | GET | `/account/profile/` | Consulta os dados do perfil do utilizador autenticado. |
 | PATCH | `/account/profile/` | Actualiza os dados da conta e do perfil do utilizador. |
+| POST | `/account/password/change/` | Altera a palavra-passe com confirmação da palavra-passe actual. |
+| POST | `/account/password/reset/` | Solicita um email de recuperação de palavra-passe. |
+| POST | `/account/password/reset/confirm/` | Define uma nova palavra-passe usando o `uid` e `token` enviados por email. |
+| DELETE | `/account/delete/` | Apaga a conta após confirmação da palavra-passe. |
+| GET | `/account/players/?q=...` | Pesquisa jogadores por nome de utilizador. |
+| GET | `/account/players/{username}/` | Consulta o perfil público e estatísticas de um jogador. |
 
 
 ## Game API
