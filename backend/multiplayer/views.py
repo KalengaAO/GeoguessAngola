@@ -8,7 +8,7 @@ from .services import (
         create_room, join_room, 
         set_player_ready, start_match,
         get_room_lobby, get_room_match, submit_multiplayer_guess,
-        get_match_results,
+        get_match_results, leave_room, timeout_multiplayer_round,
     )
 
 from .serializers import (
@@ -19,6 +19,7 @@ from .serializers import (
     MultiplayerGuessSerializer,
     MultiplayerGuessResponseSerializer,
     MatchResultSerializer,
+    LeaveRoomSerializer,
 )
 
 class CreateRoomView(APIView):
@@ -97,6 +98,34 @@ class PlayerReadyView(APIView):
 
         return Response(
             response_serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class LeaveRoomView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = LeaveRoomSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            room = leave_room(
+                user=request.user,
+                room_code=serializer.validated_data["code"],
+            )
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "code": room.code,
+                "status": room.status,
+                "message": "Saíste da sala.",
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -221,6 +250,33 @@ class SubmitMultiplayerGuessView(APIView):
         return Response(
             response_serializer.data,
             status=status.HTTP_201_CREATED,
+        )
+
+
+class TimeoutMultiplayerRoundView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, round_id):
+        try:
+            multiplayer_round = timeout_multiplayer_round(
+                round_id,
+                user=request.user,
+            )
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "round_id": multiplayer_round.id,
+                "round_number": multiplayer_round.round_number,
+                "status": multiplayer_round.status,
+                "timed_out": True,
+                "completed_at": multiplayer_round.completed_at,
+            },
+            status=status.HTTP_200_OK,
         )
 
 

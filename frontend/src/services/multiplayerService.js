@@ -13,6 +13,11 @@ export async function joinMultiplayerRoom(code) {
     return data;
 }
 
+export async function leaveMultiplayerRoom(code) {
+    const { data } = await api.post("/multiplayer/rooms/leave/", { code });
+    return data;
+}
+
 export async function getMultiplayerRoom(code, options = {}) {
     const { data } = await api.get(`/multiplayer/rooms/${code}/`, options);
     return data;
@@ -46,6 +51,13 @@ export async function submitMultiplayerGuess(roundId, location) {
             guessed_latitude: location.latitude,
             guessed_longitude: location.longitude,
         }
+    );
+    return data;
+}
+
+export async function timeoutMultiplayerRound(roundId) {
+    const { data } = await api.post(
+        `/multiplayer/rounds/${roundId}/timeout/`
     );
     return data;
 }

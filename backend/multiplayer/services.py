@@ -134,6 +134,78 @@ def set_player_ready(user, room_code, is_ready):
 
     return participant
 
+
+@transaction.atomic
+def leave_room(user, room_code):
+    try:
+        room = (
+            GameRoom.objects
+            .select_for_update()
+            .get(code=room_code.upper())
+        )
+    except GameRoom.DoesNotExist:
+        raise ValueError("Sala não encontrada.")
+
+    try:
+        participant = (
+            RoomParticipant.objects
+            .select_for_update()
+            .get(
+                room=room,
+                user=user,
+                is_active=True,
+            )
+        )
+    except RoomParticipant.DoesNotExist:
+        raise ValueError("Não és um participante activo desta sala.")
+
+    if room.status == GameRoom.Status.WAITING:
+        if room.host_id == user.id:
+            room.status = GameRoom.Status.CLOSED
+            room.save(update_fields=["status"])
+            room.participants.update(
+                is_active=False,
+                is_ready=False,
+            )
+        else:
+            participant.is_active = False
+            participant.is_ready = False
+            participant.save(update_fields=["is_active", "is_ready"])
+
+        return room
+
+    if room.status == GameRoom.Status.IN_PROGRESS:
+        participant.is_active = False
+        participant.is_ready = False
+        participant.save(update_fields=["is_active", "is_ready"])
+
+        active_participants = room.participants.filter(
+            is_active=True,
+        ).order_by("joined_at")
+
+        if not active_participants.exists():
+            room.status = GameRoom.Status.CLOSED
+            room.save(update_fields=["status"])
+            try:
+                match = room.match
+                if match.status == MultiplayerMatch.Status.IN_PROGRESS:
+                    match.status = MultiplayerMatch.Status.CANCELLED
+                    match.finished_at = timezone.now()
+                    match.save(update_fields=["status", "finished_at"])
+            except MultiplayerMatch.DoesNotExist:
+                pass
+        elif room.host_id == user.id:
+            replacement = active_participants.first()
+            room.host = replacement.user
+            room.save(update_fields=["host"])
+
+        return room
+
+    participant.is_active = False
+    participant.is_ready = False
+    participant.save(update_fields=["is_active", "is_ready"])
+    return room
+
 @transaction.atomic
 def start_match(user, room_code):
     try:
@@ -259,6 +331,17 @@ def submit_multiplayer_guess(
     if multiplayer_round.status != MultiplayerRound.Status.ACTIVE:
         raise ValueError("Esta ronda já não está activa.")
 
+    timeout_after = (
+        settings.ROUND_TIME_SECONDS
+        + settings.ROUND_TIME_GRACE_SECONDS
+    )
+    elapsed_seconds = (
+        timezone.now() - multiplayer_round.started_at
+    ).total_seconds()
+    if elapsed_seconds > timeout_after:
+        timeout_multiplayer_round(multiplayer_round)
+        raise ValueError("O tempo para responder a esta ronda terminou.")
+
     try:
         participant = RoomParticipant.objects.get(
             room=multiplayer_round.match.room,
@@ -310,6 +393,56 @@ def submit_multiplayer_guess(
 
     return guess
 
+
+@transaction.atomic
+def timeout_multiplayer_round(round_id, user=None):
+    if isinstance(round_id, MultiplayerRound):
+        multiplayer_round = (
+            MultiplayerRound.objects
+            .select_for_update()
+            .select_related("match")
+            .get(pk=round_id.pk)
+        )
+    else:
+        try:
+            multiplayer_round = (
+                MultiplayerRound.objects
+                .select_for_update()
+                .select_related("match")
+                .get(pk=round_id)
+            )
+        except MultiplayerRound.DoesNotExist:
+            raise ValueError("Ronda não encontrada.")
+
+    if multiplayer_round.match.status != MultiplayerMatch.Status.IN_PROGRESS:
+        raise ValueError("Esta partida já não está em andamento.")
+
+    if user is not None:
+        is_participant = RoomParticipant.objects.filter(
+            room=multiplayer_round.match.room,
+            user=user,
+            is_active=True,
+        ).exists()
+        if not is_participant:
+            raise ValueError("Não és um participante activo nesta partida.")
+
+    if multiplayer_round.status == MultiplayerRound.Status.COMPLETED:
+        return multiplayer_round
+
+    elapsed_seconds = (
+        timezone.now() - multiplayer_round.started_at
+    ).total_seconds()
+    timeout_after = settings.ROUND_TIME_SECONDS
+    if elapsed_seconds < timeout_after:
+        raise ValueError("A ronda ainda está dentro do tempo permitido.")
+
+    multiplayer_round.status = MultiplayerRound.Status.COMPLETED
+    multiplayer_round.completed_at = timezone.now()
+    multiplayer_round.save(
+        update_fields=["status", "completed_at"]
+    )
+    return multiplayer_round
+
 def complete_round_if_ready(multiplayer_round):
     room = multiplayer_round.match.room
 
@@ -348,14 +481,8 @@ def advance_multiplayer_round(match_id, user):
     if match.status != MultiplayerMatch.Status.IN_PROGRESS:
         raise ValueError("Esta partida já não está em andamento.")
 
-    # Verificar se o utilizador pertence à sala e continua activo.
-    is_participant = match.room.participants.filter(
-        user=user,
-        is_active=True,
-    ).exists()
-
-    if not is_participant:
-        raise ValueError("Não és um participante activo nesta partida.")
+    if match.room.host_id != user.id:
+        raise ValueError("Apenas o anfitrião pode avançar a partida.")
 
     # Obter e bloquear a última ronda.
     last_round = match.rounds.select_for_update().order_by(

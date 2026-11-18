@@ -48,6 +48,17 @@ class JoinRoomSerializer(serializers.Serializer):
     def validate_code(self, value):
         return value.upper()
 
+
+class LeaveRoomSerializer(serializers.Serializer):
+    code = serializers.CharField(
+        max_length=8,
+        min_length=8,
+        trim_whitespace=True,
+    )
+
+    def validate_code(self, value):
+        return value.upper()
+
 class RoomParticipantSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(

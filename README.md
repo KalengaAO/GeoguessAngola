@@ -31,9 +31,11 @@ Todas as rotas requerem autenticação JWT (`Bearer Token`).
 | POST | `/rooms/` | Cria uma sala multiplayer e regista o criador como anfitrião. |
 | POST | `/rooms/join/` | Permite ao utilizador entrar numa sala através do código. |
 | POST | `/rooms/ready/` | Actualiza o estado de preparação do participante. |
+| POST | `/rooms/leave/` | Remove o participante activo da sala e reatribui o anfitrião, quando necessário. |
 | POST | `/rooms/start/` | Inicia a partida após validar as condições de preparação e a autorização do anfitrião. |
 | GET | `/rooms/{room_code}/match/` | Consulta os detalhes da partida, participantes e rondas. |
 | POST | `/rounds/{round_id}/guess/` | Submete o palpite geográfico de um participante numa ronda. |
+| POST | `/rounds/{round_id}/timeout/` | Conclui uma ronda após o limite de tempo. |
 | POST | `/matches/{match_id}/advance/` | Conclui a partida ou cria a ronda seguinte. |
 | GET | `/matches/{match_id}/results/` | Consulta a classificação e as pontuações acumuladas dos participantes. |
 
