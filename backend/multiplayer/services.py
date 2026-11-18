@@ -183,9 +183,15 @@ def leave_room(user, room_code):
             is_active=True,
         ).order_by("joined_at")
 
-        if not active_participants.exists():
+        active_player_count = active_participants.count()
+
+        if active_player_count < 2:
             room.status = GameRoom.Status.CLOSED
             room.save(update_fields=["status"])
+            active_participants.update(
+                is_active=False,
+                is_ready=False,
+            )
             try:
                 match = room.match
                 if match.status == MultiplayerMatch.Status.IN_PROGRESS:

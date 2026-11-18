@@ -120,10 +120,14 @@ class LeaveRoomView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        match = getattr(room, "match", None)
         return Response(
             {
                 "code": room.code,
                 "status": room.status,
+                "match_status": (
+                    match.status if match is not None else None
+                ),
                 "message": "Saíste da sala.",
             },
             status=status.HTTP_200_OK,

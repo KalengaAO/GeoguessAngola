@@ -129,6 +129,34 @@ class MultiplayerRoomApiTests(TestCase):
             MultiplayerRound.Status.COMPLETED,
         )
 
+    def test_match_is_cancelled_when_only_one_player_remains(self):
+        room = create_room(self.host)
+        player = User.objects.create_user(
+            username="player",
+            password="password123",
+        )
+        join_room(player, room.code)
+
+        room.status = "in_progress"
+        room.save(update_fields=["status"])
+        match = MultiplayerMatch.objects.create(room=room)
+
+        self.client.force_authenticate(player)
+        response = self.client.post(
+            "/api/multiplayer/rooms/leave/",
+            {"code": room.code},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        room.refresh_from_db()
+        match.refresh_from_db()
+        self.assertEqual(room.status, "closed")
+        self.assertEqual(match.status, "cancelled")
+        self.assertEqual(
+            room.participants.filter(is_active=True).count(),
+            0,
+        )
+
     def test_timeout_completes_expired_round(self):
         room = create_room(self.host)
         location = GeoLocation.objects.create(
