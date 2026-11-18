@@ -9,9 +9,9 @@ import {
     startNextRound,
 } from "../services/gameService";
 
-export const RESULT_DISPLAY_SECONDS = 6;
+export const RESULT_DISPLAY_SECONDS = 10;
 
-const DEFAULT_TIME_LIMIT = 30;
+const DEFAULT_TIME_LIMIT = 60;
 
 function toLocation(latitude, longitude) {
     return latitude != null && longitude != null
