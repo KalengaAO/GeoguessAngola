@@ -15,6 +15,15 @@ def get_playable_images():
 
 @transaction.atomic
 def start_game(user):
+    if GameSession.objects.filter(
+        user=user,
+        status=GameSession.Status.IN_PROGRESS,
+    ).exists():
+        raise ValueError(
+            "Já existe uma partida em andamento. Retoma essa partida antes "
+            "de iniciar uma nova."
+        )
+
     image = choose_random_image()
 
     if image is None:
@@ -31,6 +40,19 @@ def start_game(user):
     )
     
     return session, game_round
+
+
+def get_active_game(user):
+    return (
+        GameSession.objects
+        .filter(
+            user=user,
+            status=GameSession.Status.IN_PROGRESS,
+        )
+        .prefetch_related("rounds__image__location")
+        .order_by("-started_at")
+        .first()
+    )
 
 def calculate_distance_km(lat1, lon1, lat2, lon2):
     """Calcula a distância entre duas coordenadas, em quilómetros."""
@@ -195,10 +217,8 @@ def advance_game(session_id, user):
         raise ValueError("A ronda atual ainda não foi respondida.")
 
     if current_round.round_number >= settings.ROUNDS_PER_GAME:
-        session.status = GameSession.Status.COMPLETED
-        session.finished_at = timezone.now()
-        session.save(update_fields=["status", "finished_at"])
-        update_player_stats(session)
+        complete_game(session_id=session_id, user=user)
+        session.refresh_from_db()
         return session, None
 
     used_image_ids = session.rounds.values_list("image_id", flat=True)
@@ -214,6 +234,54 @@ def advance_game(session_id, user):
     )
 
     return session, next_round
+
+
+@transaction.atomic
+def complete_game(session_id, user):
+    session = (
+        GameSession.objects
+        .select_for_update()
+        .get(pk=session_id, user=user)
+    )
+
+    if session.status == GameSession.Status.COMPLETED:
+        return session
+
+    if session.status != GameSession.Status.IN_PROGRESS:
+        raise ValueError("Esta partida já não está em andamento.")
+
+    rounds = session.rounds.order_by("round_number")
+    if rounds.count() < settings.ROUNDS_PER_GAME:
+        raise ValueError("A partida ainda não tem todas as rondas.")
+
+    if rounds.filter(answered_at__isnull=True).exists():
+        raise ValueError("Ainda existem rondas por responder.")
+
+    session.status = GameSession.Status.COMPLETED
+    session.finished_at = timezone.now()
+    session.save(update_fields=["status", "finished_at"])
+    update_player_stats(session)
+    return session
+
+
+@transaction.atomic
+def abandon_game(session_id, user):
+    session = (
+        GameSession.objects
+        .select_for_update()
+        .get(pk=session_id, user=user)
+    )
+
+    if session.status == GameSession.Status.ABANDONED:
+        return session
+
+    if session.status != GameSession.Status.IN_PROGRESS:
+        raise ValueError("Esta partida já não está em andamento.")
+
+    session.status = GameSession.Status.ABANDONED
+    session.finished_at = timezone.now()
+    session.save(update_fields=["status", "finished_at"])
+    return session
 
 def choose_random_image(exclude_ids=None):
     images = get_playable_images()

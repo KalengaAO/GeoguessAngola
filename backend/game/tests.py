@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -116,3 +116,77 @@ class GameApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         game_round.refresh_from_db()
         self.assertIsNone(game_round.answered_at)
+
+    def create_round(self, session, answered=False):
+        location = GeoLocation.objects.create(
+            name=f"Location {session.id}",
+            province="Luanda",
+            latitude=-8.8,
+            longitude=13.2,
+        )
+        image = LocationImage.objects.create(
+            location=location,
+            image="locations/test.jpg",
+        )
+        return GameRound.objects.create(
+            session=session,
+            image=image,
+            round_number=1,
+            answered_at=timezone.now() if answered else None,
+            score=100 if answered else 0,
+        )
+
+    def test_resume_returns_the_active_game(self):
+        session = GameSession.objects.create(user=self.user)
+        game_round = self.create_round(session)
+
+        response = self.client.get("/api/game/resume/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["session_id"], session.id)
+        self.assertEqual(response.data["round"]["id"], game_round.id)
+
+    def test_start_rejects_a_second_active_game(self):
+        session = GameSession.objects.create(user=self.user)
+        self.create_round(session)
+
+        response = self.client.post("/api/game/start/")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("partida em andamento", response.data["detail"])
+
+    @override_settings(ROUNDS_PER_GAME=1)
+    def test_complete_game_updates_status_and_player_stats(self):
+        session = GameSession.objects.create(user=self.user)
+        self.create_round(session, answered=True)
+
+        response = self.client.post(
+            f"/api/game/{session.id}/complete/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        session.refresh_from_db()
+        self.assertEqual(session.status, GameSession.Status.COMPLETED)
+        self.assertEqual(response.data["total_score"], 100)
+        stats = PlayerStats.objects.get(user=self.user)
+        self.assertEqual(stats.games_played, 1)
+        self.assertEqual(stats.total_score, 100)
+
+    def test_abandon_game_is_recorded_in_history(self):
+        session = GameSession.objects.create(user=self.user)
+        self.create_round(session)
+
+        response = self.client.post(
+            f"/api/game/{session.id}/abandon/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        session.refresh_from_db()
+        self.assertEqual(session.status, GameSession.Status.ABANDONED)
+
+        history_response = self.client.get("/api/game/history/")
+        self.assertEqual(history_response.status_code, 200)
+        self.assertEqual(
+            history_response.data["results"][0]["session_id"],
+            session.id,
+        )

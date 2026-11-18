@@ -67,7 +67,11 @@ Todas as rotas requerem autenticação JWT (`Bearer Token`).
 | Método | Endpoint | Descrição |
 |:---:|---|---|
 | POST | `/start/` | Inicia uma nova partida e cria a primeira ronda. |
+| GET | `/resume/` | Retoma a partida em andamento do utilizador autenticado. |
+| GET | `/history/` | Lista as partidas concluídas ou abandonadas do utilizador. |
 | POST | `/rounds/{round_id}/answer/` | Submete a localização escolhida pelo jogador e calcula a distância e pontuação. |
+| POST | `/{session_id}/complete/` | Conclui uma partida depois de todas as rondas serem respondidas. |
+| POST | `/{session_id}/abandon/` | Abandona uma partida em andamento. |
 
 
 ## Quiz API

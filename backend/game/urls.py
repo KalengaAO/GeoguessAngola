@@ -7,10 +7,16 @@ from .views import (
     GameStatusView,
     PlayerStatsView,
     LeaderboardView,
+    ResumeGameView,
+    CompleteGameView,
+    AbandonGameView,
+    GameHistoryView,
 )
 
 urlpatterns = [
     path("start/", StartGameView.as_view(), name="start_game"),
+    path("resume/", ResumeGameView.as_view(), name="resume_game"),
+    path("history/", GameHistoryView.as_view(), name="game_history"),
     path("leaderboard/", LeaderboardView.as_view(), name="leaderboard"),
     path(
         "rounds/<int:round_id>/answer/",
@@ -31,6 +37,16 @@ urlpatterns = [
         "<int:session_id>/status/",
         GameStatusView.as_view(),
         name="game-status",
+    ),
+    path(
+        "<int:session_id>/complete/",
+        CompleteGameView.as_view(),
+        name="complete-game",
+    ),
+    path(
+        "<int:session_id>/abandon/",
+        AbandonGameView.as_view(),
+        name="abandon-game",
     ),
     path(
     "stats/",
