@@ -1,0 +1,7 @@
+django 
+djangorestframework 
+psycopg2-binary
+redis
+pillow
+djangorestframework-simplejwt
+django-cors-headers
