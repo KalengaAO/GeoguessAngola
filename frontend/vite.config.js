@@ -7,9 +7,10 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: '0.0.0.0',
+    host: true,
     port: 5173,
-    strictPort: true,
+    allowedHosts: true,
+    hmr: { protocol: 'wss', clientPort: 443 },  // HMR através do Nginx em HTTPS
   },
   resolve: {
     alias: {
