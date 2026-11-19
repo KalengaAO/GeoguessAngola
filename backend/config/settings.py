@@ -41,7 +41,7 @@ def read_secret(secret_name):
 SECRET_KEY = 'django-insecure-*gy8i(k^tcm56=mo=*n&32w_v)zk@_s9lojygkptlz=ixm6zc='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
