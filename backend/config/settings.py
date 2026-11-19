@@ -175,7 +175,7 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 DOMAIN_NAME=os.getenv("DOMAIN_NAME")
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = [DOMAIN_NAME, "127.0.0.1"]
 CSRF_TRUSTED_ORIGINS = ["https://DOMAIN_NAME"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
