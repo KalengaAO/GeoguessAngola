@@ -186,7 +186,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://geoguessangola.localhost",
 ]
 
-ALLOWED_HOSTS = [f"{os.getenv('DOMAIN_NAME')}", "127.0.0.1"]
+ALLOWED_HOSTS = [f"{os.getenv('DOMAIN_NAME')}", "127.0.0.1", "localhost", "geoguessangola.localhost"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
