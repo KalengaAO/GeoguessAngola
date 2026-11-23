@@ -180,6 +180,7 @@ CSRF_TRUSTED_ORIGINS = [
     f"https://{os.getenv('DOMAIN_NAME')}",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "https://localhost:1234",
     "http://geoguessangola.localhost:8000",
     "https://geoguessangola.localhost",
 ]
