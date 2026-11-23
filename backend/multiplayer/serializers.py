@@ -59,6 +59,18 @@ class LeaveRoomSerializer(serializers.Serializer):
     def validate_code(self, value):
         return value.upper()
 
+
+class SendRoomInvitationSerializer(serializers.Serializer):
+    code = serializers.CharField(
+        max_length=8,
+        min_length=8,
+        trim_whitespace=True,
+    )
+    username = serializers.CharField(max_length=150)
+
+    def validate_code(self, value):
+        return value.upper()
+
 class RoomParticipantSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(

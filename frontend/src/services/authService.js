@@ -39,6 +39,34 @@ export async function updateCurrentUser(profileData) {
     return response.data;
 }
 
+export async function searchPlayers(query) {
+    const { data } = await api.get("/account/players/", {
+        params: { q: query },
+    });
+    return data;
+}
+
+export async function getFriends(status = "accepted") {
+    const { data } = await api.get("/account/friends/", {
+        params: { status },
+    });
+    return data;
+}
+
+export async function sendFriendRequest(username) {
+    const { data } = await api.post(
+        `/account/friends/request/${encodeURIComponent(username)}/`
+    );
+    return data;
+}
+
+export async function respondToFriendRequest(friendshipId, action) {
+    const { data } = await api.post(
+        `/account/friends/${friendshipId}/${action}/`
+    );
+    return data;
+}
+
 // Encerrar sessão local
 export function logoutUser() {
     clearAuthTokens();

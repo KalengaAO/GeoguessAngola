@@ -197,3 +197,52 @@ class MultiplayerGuess(models.Model):
             f"{self.participant.user.username} - "
             f"Ronda {self.round.round_number}"
         )
+
+
+class RoomInvitation(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pendente"
+        ACCEPTED = "accepted", "Aceite"
+        DECLINED = "declined", "Recusado"
+        CANCELLED = "cancelled", "Cancelado"
+        EXPIRED = "expired", "Expirada"
+
+    room = models.ForeignKey(
+        GameRoom,
+        on_delete=models.CASCADE,
+        related_name="invitations",
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="room_invitations_sent",
+    )
+    receiver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="room_invitations_received",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["room", "receiver"],
+                condition=Q(status="pending"),
+                name="unique_pending_room_invitation",
+            ),
+            models.CheckConstraint(
+                condition=~Q(sender=models.F("receiver")),
+                name="room_invitation_not_self",
+            ),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.sender.username} convidou {self.receiver.username}"

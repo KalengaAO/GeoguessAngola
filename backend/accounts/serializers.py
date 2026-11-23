@@ -124,3 +124,11 @@ class PublicPlayerSerializer(serializers.ModelSerializer):
     def get_bio(self, obj):
         profile = getattr(obj, "profile", None)
         return profile.bio if profile else ""
+
+
+class FriendshipSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    responded_at = serializers.DateTimeField(read_only=True)

@@ -8,12 +8,13 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.http import urlsafe_base64_decode
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from .models import UserProfile
+from .models import Friendship, UserProfile
 from game.models import GameSession, PlayerStats
 from multiplayer.models import GameRoom, MultiplayerMatch
 from quiz.models import QuizSession
@@ -25,6 +26,7 @@ from .serializers import (
     ProfileSerializer,
     PublicPlayerSerializer,
     RegisterSerializer,
+    FriendshipSerializer,
 )
 
 User = get_user_model()
@@ -239,5 +241,196 @@ class PlayerSearchView(APIView):
                 context={"request": request},
             ).data
         )
+
+
+class FriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, username):
+        receiver = get_object_or_404(
+            User,
+            username=username,
+            is_active=True,
+        )
+        if receiver.pk == request.user.pk:
+            return Response(
+                {"detail": "Não podes enviar um pedido a ti próprio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing = (
+            Friendship.objects
+            .select_for_update()
+            .filter(
+                Q(requester=request.user, receiver=receiver)
+                | Q(requester=receiver, receiver=request.user)
+            )
+            .first()
+        )
+
+        if existing:
+            if existing.status == Friendship.Status.ACCEPTED:
+                return Response(
+                    {"detail": "Esta pessoa já é tua amiga."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if existing.status == Friendship.Status.PENDING:
+                if existing.requester_id == request.user.pk:
+                    return Response(
+                        {"detail": "Já enviaste um pedido a esta pessoa."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                return Response(
+                    {"detail": "Esta pessoa já enviou-te um pedido."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            existing.requester = request.user
+            existing.receiver = receiver
+            existing.status = Friendship.Status.PENDING
+            existing.responded_at = None
+            existing.save(
+                update_fields=[
+                    "requester",
+                    "receiver",
+                    "status",
+                    "responded_at",
+                ]
+            )
+            friendship = existing
+        else:
+            friendship = Friendship.objects.create(
+                requester=request.user,
+                receiver=receiver,
+            )
+
+        return Response(
+            {
+                "id": friendship.id,
+                "username": receiver.username,
+                "status": friendship.status,
+                "created_at": friendship.created_at,
+                "responded_at": friendship.responded_at,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class FriendActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, friendship_id, action):
+        try:
+            friendship = (
+                Friendship.objects
+                .select_for_update()
+                .select_related("requester", "receiver")
+                .get(pk=friendship_id)
+            )
+        except Friendship.DoesNotExist:
+            return Response(
+                {"detail": "Pedido de amizade não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if action == "cancel":
+            if friendship.requester_id != request.user.pk:
+                return Response(
+                    {"detail": "Só podes cancelar pedidos enviados por ti."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        elif friendship.receiver_id != request.user.pk:
+            return Response(
+                {"detail": "Não tens autorização para responder a este pedido."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if friendship.status != Friendship.Status.PENDING:
+            return Response(
+                {"detail": "Este pedido já foi respondido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if action == "accept":
+            friendship.status = Friendship.Status.ACCEPTED
+        elif action == "reject":
+            friendship.status = Friendship.Status.REJECTED
+        elif action == "cancel":
+            friendship.status = Friendship.Status.CANCELLED
+        else:
+            return Response(
+                {"detail": "Acção inválida."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        friendship.responded_at = timezone.now()
+        friendship.save(update_fields=["status", "responded_at"])
+
+        other_user = (
+            friendship.requester
+            if friendship.receiver_id == request.user.pk
+            else friendship.receiver
+        )
+        return Response(
+            {
+                "id": friendship.id,
+                "username": other_user.username,
+                "status": friendship.status,
+                "created_at": friendship.created_at,
+                "responded_at": friendship.responded_at,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class FriendListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        status_filter = request.query_params.get("status", "accepted")
+
+        friendships = (
+            Friendship.objects.filter(
+                Q(requester=request.user) | Q(receiver=request.user)
+            )
+            .select_related("requester", "receiver")
+            .order_by("-created_at")
+        )
+
+        valid_statuses = {
+            item.value for item in Friendship.Status
+        }
+        if status_filter not in valid_statuses:
+            return Response(
+                {"detail": "Estado de amizade inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        friendships = friendships.filter(status=status_filter)
+        results = []
+        for friendship in friendships:
+            other_user = (
+                friendship.receiver
+                if friendship.requester_id == request.user.pk
+                else friendship.requester
+            )
+            results.append(
+                {
+                    "id": friendship.id,
+                    "username": other_user.username,
+                    "status": friendship.status,
+                    "created_at": friendship.created_at,
+                    "responded_at": friendship.responded_at,
+                    "direction": (
+                        "sent"
+                        if friendship.requester_id == request.user.pk
+                        else "received"
+                    ),
+                }
+            )
+
+        return Response(results, status=status.HTTP_200_OK)
 
  
