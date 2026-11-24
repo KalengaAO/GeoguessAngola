@@ -11,7 +11,9 @@ from .models import (
     MultiplayerMatch,
     MultiplayerGuess,
     MultiplayerRound,
+    RoomInvitation,
 )
+from accounts.models import Friendship
 from .services import join_room
 
 User = get_user_model()
@@ -155,6 +157,39 @@ class MultiplayerRoomApiTests(TestCase):
         self.assertEqual(
             room.participants.filter(is_active=True).count(),
             0,
+        )
+
+    def test_friend_can_receive_and_accept_room_invitation(self):
+        room = create_room(self.host)
+        friend = User.objects.create_user(
+            username="friend",
+            password="password123",
+        )
+        Friendship.objects.create(
+            requester=self.host,
+            receiver=friend,
+            status=Friendship.Status.ACCEPTED,
+        )
+
+        response = self.client.post(
+            "/api/multiplayer/rooms/invitations/",
+            {"code": room.code, "username": friend.username},
+        )
+        self.assertEqual(response.status_code, 201)
+        invitation = RoomInvitation.objects.get(
+            receiver=friend,
+        )
+
+        self.client.force_authenticate(friend)
+        accept_response = self.client.post(
+            f"/api/multiplayer/invitations/{invitation.id}/accept/"
+        )
+        self.assertEqual(accept_response.status_code, 200)
+        self.assertTrue(
+            room.participants.filter(
+                user=friend,
+                is_active=True,
+            ).exists()
         )
 
     def test_timeout_completes_expired_round(self):

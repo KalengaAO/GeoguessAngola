@@ -4,11 +4,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import render
 from rest_framework import status
+from django.contrib.auth import get_user_model
 from .services import (
         create_room, join_room, 
         set_player_ready, start_match,
         get_room_lobby, get_room_match, submit_multiplayer_guess,
         get_match_results, leave_room, timeout_multiplayer_round,
+        send_room_invitation, respond_room_invitation,
+        get_room_invitations,
     )
 
 from .serializers import (
@@ -20,7 +23,10 @@ from .serializers import (
     MultiplayerGuessResponseSerializer,
     MatchResultSerializer,
     LeaveRoomSerializer,
+    SendRoomInvitationSerializer,
 )
+
+User = get_user_model()
 
 class CreateRoomView(APIView):
 
@@ -129,6 +135,109 @@ class LeaveRoomView(APIView):
                     match.status if match is not None else None
                 ),
                 "message": "Saíste da sala.",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class SendRoomInvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = SendRoomInvitationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            receiver = User.objects.get(
+                username=serializer.validated_data["username"],
+                is_active=True,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Jogador não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            invitation = send_room_invitation(
+                user=request.user,
+                room_code=serializer.validated_data["code"],
+                receiver=receiver,
+            )
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "id": invitation.id,
+                "room_code": invitation.room.code,
+                "sender": invitation.sender.username,
+                "receiver": invitation.receiver.username,
+                "status": invitation.status,
+                "created_at": invitation.created_at,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class RoomInvitationListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        status_filter = request.query_params.get("status")
+        invitations = get_room_invitations(request.user)
+        if status_filter:
+            invitations = invitations.filter(status=status_filter)
+
+        return Response(
+            [
+                {
+                    "id": invitation.id,
+                    "room_code": invitation.room.code,
+                    "sender": invitation.sender.username,
+                    "receiver": invitation.receiver.username,
+                    "status": invitation.status,
+                    "created_at": invitation.created_at,
+                    "responded_at": invitation.responded_at,
+                    "direction": (
+                        "sent"
+                        if invitation.sender_id == request.user.pk
+                        else "received"
+                    ),
+                }
+                for invitation in invitations
+            ],
+            status=status.HTTP_200_OK,
+        )
+
+
+class RespondRoomInvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, invitation_id, action):
+        try:
+            invitation = respond_room_invitation(
+                user=request.user,
+                invitation_id=invitation_id,
+                action=action,
+            )
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "id": invitation.id,
+                "room_code": invitation.room.code,
+                "sender": invitation.sender.username,
+                "receiver": invitation.receiver.username,
+                "status": invitation.status,
+                "responded_at": invitation.responded_at,
             },
             status=status.HTTP_200_OK,
         )

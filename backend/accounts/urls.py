@@ -8,6 +8,9 @@ from .views import (
     ProfileView,
     PublicPlayerProfileView,
     RegisterView,
+    FriendRequestView,
+    FriendActionView,
+    FriendListView,
 )
 
 urlpatterns = [
@@ -30,5 +33,16 @@ urlpatterns = [
         "players/<str:username>/",
         PublicPlayerProfileView.as_view(),
         name="public-player-profile",
+    ),
+    path("friends/", FriendListView.as_view(), name="friend-list"),
+    path(
+        "friends/request/<str:username>/",
+        FriendRequestView.as_view(),
+        name="friend-request",
+    ),
+    path(
+        "friends/<int:friendship_id>/<str:action>/",
+        FriendActionView.as_view(),
+        name="friend-action",
     ),
 ]

@@ -6,6 +6,8 @@ from .views import (
     RoomMatchDetailView, SubmitMultiplayerGuessView,
     AdvanceMultiplayerRoundView, MatchResultsView,
     LeaveRoomView, TimeoutMultiplayerRoundView,
+    SendRoomInvitationView, RoomInvitationListView,
+    RespondRoomInvitationView,
 )
 
 urlpatterns = [
@@ -13,6 +15,21 @@ urlpatterns = [
     path("rooms/join/", JoinRoomView.as_view(), name="join_room"),
     path("rooms/ready/", PlayerReadyView.as_view(), name="player_ready"),
     path("rooms/leave/", LeaveRoomView.as_view(), name="leave_room"),
+    path(
+        "rooms/invitations/",
+        SendRoomInvitationView.as_view(),
+        name="send_room_invitation",
+    ),
+    path(
+        "invitations/",
+        RoomInvitationListView.as_view(),
+        name="room_invitations",
+    ),
+    path(
+        "invitations/<int:invitation_id>/<str:action>/",
+        RespondRoomInvitationView.as_view(),
+        name="respond_room_invitation",
+    ),
     path("rooms/start/", StartMatchView.as_view(), name="start_match"),
     path("rooms/<str:room_code>/", RoomLobbyView.as_view(), name="room_lobby"),
     path("rooms/<str:room_code>/match/", RoomMatchDetailView.as_view(), name="room_match_detail"),

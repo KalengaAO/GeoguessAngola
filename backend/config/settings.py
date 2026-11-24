@@ -173,18 +173,9 @@ REST_FRAMEWORK = {
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-#CSRF_TRUSTED_ORIGINS = [f"https://{os.getenv('DOMAIN_NAME')}"]
-
-
-CSRF_TRUSTED_ORIGINS = [
-    f"https://{os.getenv('DOMAIN_NAME')}",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://geoguessangola.localhost:8000",
-    "https://geoguessangola.localhost",
-]
 
 ALLOWED_HOSTS = [f"{os.getenv('DOMAIN_NAME')}", "127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = [f"https://{os.getenv('DOMAIN_NAME')}"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True

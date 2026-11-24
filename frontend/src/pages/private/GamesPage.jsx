@@ -23,10 +23,19 @@ import {
 import {
     createMultiplayerRoom,
     getMultiplayerRoom,
+    getRoomInvitations,
     joinMultiplayerRoom,
+    respondToRoomInvitation,
+    sendRoomInvitation,
     setMultiplayerReady,
     startMultiplayer,
 } from "../../services/multiplayerService";
+import {
+    getFriends,
+    respondToFriendRequest,
+    searchPlayers,
+    sendFriendRequest,
+} from "../../services/authService";
 import { startGame } from "../../services/gameService";
 import { startQuizSession } from "../../services/quizService";
 import { getApiErrorMessage } from "../../utils/apiErrors";
@@ -64,6 +73,11 @@ function GamesPage() {
     const [isBusy, setIsBusy] = useState(false);
     const [pendingMode, setPendingMode] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [playerQuery, setPlayerQuery] = useState("");
+    const [playerResults, setPlayerResults] = useState([]);
+    const [friends, setFriends] = useState([]);
+    const [pendingFriendRequests, setPendingFriendRequests] = useState([]);
+    const [roomInvitations, setRoomInvitations] = useState([]);
 
     useEffect(() => {
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -76,6 +90,38 @@ function GamesPage() {
 
         return () => window.clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (activeMode !== "multiplayer") return;
+
+        Promise.all([
+            getFriends("accepted"),
+            getFriends("pending"),
+            getRoomInvitations("pending"),
+        ]).then(([accepted, pending, invitations]) => {
+            setFriends(accepted);
+            setPendingFriendRequests(pending);
+            setRoomInvitations(invitations);
+        }).catch(() => {
+            toast.error("Não foi possível carregar amigos e convites.");
+        });
+    }, [activeMode, roomCode]);
+
+    useEffect(() => {
+        const query = playerQuery.trim();
+        if (query.length < 2) {
+            setPlayerResults([]);
+            return undefined;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            searchPlayers(query)
+                .then(setPlayerResults)
+                .catch(() => setPlayerResults([]));
+        }, 300);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [playerQuery]);
 
     const roomQuery = useQuery({
         queryKey: ["multiplayer", "room", roomCode],
@@ -162,6 +208,48 @@ function GamesPage() {
             navigate(`/multiplayer/${roomCode}`, {
                 state: { isHost: true },
             });
+        });
+    }
+
+    async function handleFriendRequest(username) {
+        await runAction(async () => {
+            await sendFriendRequest(username);
+            toast.success(`Pedido enviado para ${username}.`);
+        });
+    }
+
+    async function handleFriendAction(friendshipId, action) {
+        await runAction(async () => {
+            await respondToFriendRequest(friendshipId, action);
+            const [accepted, pending] = await Promise.all([
+                getFriends("accepted"),
+                getFriends("pending"),
+            ]);
+            setFriends(accepted);
+            setPendingFriendRequests(pending);
+        });
+    }
+
+    async function handleRoomInvitation(username) {
+        await runAction(async () => {
+            await sendRoomInvitation(roomCode, username);
+            toast.success(`Convite enviado para ${username}.`);
+        });
+    }
+
+    async function handleRoomInvitationAction(invitationId, action) {
+        await runAction(async () => {
+            const invitation = await respondToRoomInvitation(
+                invitationId,
+                action,
+            );
+            if (action === "accept") {
+                setRoomCode(invitation.room_code);
+                setIsHost(false);
+            }
+            setRoomInvitations(
+                (items) => items.filter((item) => item.id !== invitationId)
+            );
         });
     }
 
@@ -330,6 +418,103 @@ function GamesPage() {
                             </CardContent>
                         </Card>
                     )}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Amigos e convites</CardTitle>
+                            <CardDescription>
+                                Pesquisa jogadores, aceita pedidos e responde a convites de sala.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <label htmlFor="player-search">Pesquisar jogador</label>
+                            <input
+                                id="player-search"
+                                value={playerQuery}
+                                onChange={(event) => setPlayerQuery(event.target.value)}
+                                placeholder="Nome de utilizador"
+                                minLength={2}
+                            />
+                            {playerResults.map((player) => (
+                                player.username !== user?.username && (
+                                    <div key={player.username}>
+                                        <span>{player.username}</span>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleFriendRequest(player.username)}
+                                            disabled={isBusy}
+                                        >
+                                            Adicionar amigo
+                                        </Button>
+                                        {roomCode && (
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => handleRoomInvitation(player.username)}
+                                                disabled={
+                                                    isBusy ||
+                                                    !friends.some(
+                                                        (friend) =>
+                                                            friend.username === player.username
+                                                    )
+                                                }
+                                            >
+                                                Convidar
+                                            </Button>
+                                        )}
+                                    </div>
+                                )
+                            ))}
+                            {pendingFriendRequests
+                                .filter((friendship) => friendship.direction === "received")
+                                .map((friendship) => (
+                                    <div key={friendship.id}>
+                                        <span>{friendship.username}</span>
+                                        <Button
+                                            onClick={() =>
+                                                handleFriendAction(friendship.id, "accept")
+                                            }
+                                            disabled={isBusy}
+                                        >
+                                            Aceitar
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                handleFriendAction(friendship.id, "reject")
+                                            }
+                                            disabled={isBusy}
+                                        >
+                                            Recusar
+                                        </Button>
+                                    </div>
+                                ))}
+                            {roomInvitations
+                                .filter((invitation) => invitation.direction === "received")
+                                .map((invitation) => (
+                                    <div key={invitation.id}>
+                                        <span>
+                                            {invitation.sender} convidou-te para a sala {invitation.room_code}
+                                        </span>
+                                        <Button
+                                            onClick={() =>
+                                                handleRoomInvitationAction(invitation.id, "accept")
+                                            }
+                                            disabled={isBusy}
+                                        >
+                                            Entrar
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                handleRoomInvitationAction(invitation.id, "decline")
+                                            }
+                                            disabled={isBusy}
+                                        >
+                                            Recusar
+                                        </Button>
+                                    </div>
+                                ))}
+                        </CardContent>
+                    </Card>
                 </section>
             )}
         </main>

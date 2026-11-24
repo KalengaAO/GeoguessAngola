@@ -7,6 +7,7 @@ from django.utils.encoding import force_bytes
 from rest_framework.test import APITestCase
 
 from game.models import GameSession, PlayerStats
+from .models import Friendship
 
 User = get_user_model()
 
@@ -94,5 +95,31 @@ class AccountApiTests(APITestCase):
         self.assertEqual(response.status_code, 204)
         self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
         self.assertFalse(GameSession.objects.filter(pk=session.pk).exists())
+
+    def test_friend_request_accept_and_list(self):
+        friend = User.objects.create_user(
+            username="friend",
+            email="friend@example.com",
+            password="Strong-password123",
+        )
+        self.client.force_authenticate(friend)
+        request_response = self.client.post(
+            "/api/account/friends/request/explorer/"
+        )
+        self.assertEqual(request_response.status_code, 201)
+        friendship_id = request_response.data["id"]
+
+        self.client.force_authenticate(self.user)
+        accept_response = self.client.post(
+            f"/api/account/friends/{friendship_id}/accept/"
+        )
+        self.assertEqual(accept_response.status_code, 200)
+
+        friends_response = self.client.get(
+            "/api/account/friends/",
+            {"status": "accepted"},
+        )
+        self.assertEqual(friends_response.status_code, 200)
+        self.assertEqual(friends_response.data[0]["username"], "friend")
 
 # Create your tests here.

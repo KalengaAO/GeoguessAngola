@@ -76,3 +76,25 @@ export async function getMultiplayerResults(matchId, options = {}) {
     );
     return data;
 }
+
+export async function sendRoomInvitation(roomCode, username) {
+    const { data } = await api.post(
+        "/multiplayer/rooms/invitations/",
+        { code: roomCode, username }
+    );
+    return data;
+}
+
+export async function getRoomInvitations(status) {
+    const { data } = await api.get("/multiplayer/invitations/", {
+        params: status ? { status } : {},
+    });
+    return data;
+}
+
+export async function respondToRoomInvitation(invitationId, action) {
+    const { data } = await api.post(
+        `/multiplayer/invitations/${invitationId}/${action}/`
+    );
+    return data;
+}

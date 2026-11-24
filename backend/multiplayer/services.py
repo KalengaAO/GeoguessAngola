@@ -9,10 +9,11 @@ from game.services import (
         calculate_distance_km, calculate_score,
         choose_random_image,
     )
+from accounts.models import Friendship
 from .models import (
         GameRoom, RoomParticipant,
         MultiplayerMatch, MultiplayerRound,
-        MultiplayerGuess,
+        MultiplayerGuess, RoomInvitation,
         )
 
 
@@ -226,6 +227,121 @@ def leave_room(user, room_code):
     participant.is_ready = False
     participant.save(update_fields=["is_active", "is_ready"])
     return room
+
+
+@transaction.atomic
+def send_room_invitation(user, room_code, receiver):
+    try:
+        room = (
+            GameRoom.objects
+            .select_for_update()
+            .get(code=room_code.upper())
+        )
+    except GameRoom.DoesNotExist:
+        raise ValueError("Sala não encontrada.")
+
+    if room.status != GameRoom.Status.WAITING:
+        raise ValueError("Só podes convidar jogadores para uma sala à espera.")
+
+    if not room.participants.filter(
+        room=room,
+        user=user,
+        is_active=True,
+    ).exists():
+        raise ValueError("Não és um participante activo desta sala.")
+
+    if receiver.pk == user.pk:
+        raise ValueError("Não podes convidar-te a ti próprio.")
+
+    is_friend = Friendship.objects.filter(
+        status=Friendship.Status.ACCEPTED,
+    ).filter(
+        Q(requester=user, receiver=receiver)
+        | Q(requester=receiver, receiver=user)
+    ).exists()
+
+    if not is_friend:
+        raise ValueError("Só podes convidar utilizadores que são teus amigos.")
+
+    if room.participants.filter(
+        user=receiver,
+        is_active=True,
+    ).exists():
+        raise ValueError("Este jogador já está nesta sala.")
+
+    active_players = room.participants.filter(is_active=True).count()
+    if active_players >= room.max_players:
+        raise ValueError("Esta sala já atingiu a capacidade máxima.")
+
+    invitation = RoomInvitation.objects.filter(
+        room=room,
+        receiver=receiver,
+        status=RoomInvitation.Status.PENDING,
+    ).first()
+    if invitation:
+        raise ValueError("Já existe um convite pendente para este jogador.")
+
+    return RoomInvitation.objects.create(
+        room=room,
+        sender=user,
+        receiver=receiver,
+    )
+
+
+@transaction.atomic
+def respond_room_invitation(user, invitation_id, action):
+    try:
+        invitation = (
+            RoomInvitation.objects
+            .select_for_update()
+            .select_related("room")
+            .get(pk=invitation_id)
+        )
+    except RoomInvitation.DoesNotExist:
+        raise ValueError("Convite não encontrado.")
+
+    if action == "cancel":
+        if invitation.sender_id != user.pk:
+            raise ValueError("Só podes cancelar convites enviados por ti.")
+    elif invitation.receiver_id != user.pk:
+        raise ValueError("Não tens autorização para responder a este convite.")
+
+    if invitation.status != RoomInvitation.Status.PENDING:
+        raise ValueError("Este convite já foi respondido.")
+
+    if invitation.room.status != GameRoom.Status.WAITING:
+        invitation.status = RoomInvitation.Status.EXPIRED
+        invitation.responded_at = timezone.now()
+        invitation.save(update_fields=["status", "responded_at"])
+        raise ValueError("Esta sala já não está disponível.")
+
+    if action == "accept":
+        join_room(
+            user=user,
+            code=invitation.room.code,
+        )
+        invitation.status = RoomInvitation.Status.ACCEPTED
+    elif action == "decline":
+        invitation.status = RoomInvitation.Status.DECLINED
+    elif action == "cancel":
+        invitation.status = RoomInvitation.Status.CANCELLED
+    else:
+        raise ValueError("Acção inválida.")
+
+    invitation.responded_at = timezone.now()
+    invitation.save(update_fields=["status", "responded_at"])
+    return invitation
+
+
+def get_room_invitations(user):
+    return (
+        RoomInvitation.objects
+        .filter(
+            Q(sender=user) | Q(receiver=user)
+        )
+        .select_related("room", "sender", "receiver")
+        .order_by("-created_at")
+    )
 
 @transaction.atomic
 def start_match(user, room_code):
