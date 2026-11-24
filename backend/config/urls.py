@@ -6,11 +6,10 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from .health import health
+from health import health
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/health/", health, name='health'),
     path("api/game/", include("game.urls")),
     path("api/account/", include("accounts.urls")),
     path("api/multiplayer/", include("multiplayer.urls")),
@@ -25,6 +24,7 @@ urlpatterns = [
         TokenRefreshView.as_view(),
         name="login_refresh",
     ),
+    path('api/health/', include('health.urls')),
 ]
 
 if settings.DEBUG:
