@@ -1,4 +1,4 @@
 from django.urls import path
-from . import health
+from .healths import health
 
 urlpatterns = [path("", health, name="health")]
