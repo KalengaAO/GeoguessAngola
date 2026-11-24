@@ -43,8 +43,6 @@ SECRET_KEY = 'django-insecure-*gy8i(k^tcm56=mo=*n&32w_v)zk@_s9lojygkptlz=ixm6zc=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
-
 
 # Application definition
 # HEAD
@@ -174,7 +172,7 @@ REST_FRAMEWORK = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-ALLOWED_HOSTS = [f"{os.getenv('DOMAIN_NAME')}", "127.0.0.1"]
+ALLOWED_HOSTS = [f"{os.getenv('DOMAIN_NAME')}", "127.0.0.1", 'backend:8000']
 CSRF_TRUSTED_ORIGINS = [f"https://{os.getenv('DOMAIN_NAME')}"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
