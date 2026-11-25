@@ -105,7 +105,7 @@ function GamePage() {
             setIsAbandoning(false);
         }
     }
-
+ 
     if (isLoading) {
         return (
             <main className="game-page">
