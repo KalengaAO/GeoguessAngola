@@ -8,3 +8,13 @@ BACKEND.md
 
 backend/config/settings.py
 frontend/.env
+
+backend/media/locations/calandula.jpeg
+backend/media/locations/Cristo_Rei.jpeg
+backend/media/locations/Deserto_de_Moçâmedes.jpeg
+backend/media/locations/fenda_da_tundavala.png
+backend/media/locations/Fortaleza_de_São_Miguel.jpeg
+backend/media/locations/Miradouro_da_Lua.jpeg
+backend/media/locations/Morro_do_Moco.jpeg
+backend/media/locations/Pedras_Negras_de_Pungo_Andongo.jpeg
+backend/media/locations/Serra_da_Leba.jpeg
