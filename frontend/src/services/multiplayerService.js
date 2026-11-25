@@ -1,5 +1,6 @@
 
 import api from "./api";
+import { roundMapCoordinate } from "../utils/mapCoordinates";
 
 export async function createMultiplayerRoom(maxPlayers = 5) {
     const { data } = await api.post("/multiplayer/rooms/", {
@@ -48,8 +49,8 @@ export async function submitMultiplayerGuess(roundId, location) {
     const { data } = await api.post(
         `/multiplayer/rounds/${roundId}/guess/`,
         {
-            guessed_latitude: location.latitude,
-            guessed_longitude: location.longitude,
+            guessed_latitude: roundMapCoordinate(location.latitude),
+            guessed_longitude: roundMapCoordinate(location.longitude),
         }
     );
     return data;
