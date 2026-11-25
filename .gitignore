@@ -6,3 +6,5 @@ BACKEND.md
 .github/*
 !.github/
 
+backend/config/settings.py
+frontend/.env
