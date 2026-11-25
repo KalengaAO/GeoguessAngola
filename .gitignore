@@ -6,8 +6,8 @@ BACKEND.md
 .github/*
 !.github/
 
-backend/config/settings.py
-frontend/.env
+
+
 
 backend/media/locations/calandula.jpeg
 backend/media/locations/Cristo_Rei.jpeg
