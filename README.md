@@ -26,22 +26,6 @@ Base URL: `/api/multiplayer/`
 
 Todas as rotas requerem autenticação JWT (`Bearer Token`).
 
-| Método | Endpoint | Descrição |
-|:---:|---|---|
-| POST | `/rooms/` | Cria uma sala multiplayer e regista o criador como anfitrião. |
-| POST | `/rooms/join/` | Permite ao utilizador entrar numa sala através do código. |
-| POST | `/rooms/ready/` | Actualiza o estado de preparação do participante. |
-| POST | `/rooms/leave/` | Remove o participante activo da sala e reatribui o anfitrião, quando necessário. |
-| POST | `/rooms/invitations/` | Convida um amigo para uma sala à espera. |
-| GET | `/invitations/` | Lista convites de sala enviados ou recebidos. |
-| POST | `/invitations/{invitation_id}/{action}/` | Aceita, recusa ou cancela um convite de sala. |
-| POST | `/rooms/start/` | Inicia a partida após validar as condições de preparação e a autorização do anfitrião. |
-| GET | `/rooms/{room_code}/match/` | Consulta os detalhes da partida, participantes e rondas. |
-| POST | `/rounds/{round_id}/guess/` | Submete o palpite geográfico de um participante numa ronda. |
-| POST | `/rounds/{round_id}/timeout/` | Conclui uma ronda após o limite de tempo. |
-| POST | `/matches/{match_id}/advance/` | Conclui a partida ou cria a ronda seguinte. |
-| GET | `/matches/{match_id}/results/` | Consulta a classificação e as pontuações acumuladas dos participantes. |
-
 
 ## Account API
 
@@ -49,22 +33,24 @@ Base URL: `/api/`
 
 Todas as rotas protegidas requerem autenticação JWT (`Bearer Token`).
 
-| Método | Endpoint | Descrição |
-|:---:|---|---|
-| POST | `/register/` | Regista um novo utilizador e cria o respectivo perfil. |
-| POST | `/token/` | Autentica o utilizador e fornece os tokens JWT. |
-| GET | `/account/profile/` | Consulta os dados do perfil do utilizador autenticado. |
-| PATCH | `/account/profile/` | Actualiza os dados da conta e do perfil do utilizador. |
-| POST | `/account/password/change/` | Altera a palavra-passe com confirmação da palavra-passe actual. |
-| POST | `/account/password/reset/` | Solicita um email de recuperação de palavra-passe. |
-| POST | `/account/password/reset/confirm/` | Define uma nova palavra-passe usando o `uid` e `token` enviados por email. |
-| DELETE | `/account/delete/` | Apaga a conta após confirmação da palavra-passe. |
-| GET | `/account/players/?q=...` | Pesquisa jogadores por nome de utilizador. |
-| GET | `/account/players/{username}/` | Consulta o perfil público e estatísticas de um jogador. |
-| GET | `/account/friends/?status=accepted` | Lista amigos ou pedidos por estado. |
-| POST | `/account/friends/request/{username}/` | Envia um pedido de amizade. |
-| POST | `/account/friends/{friendship_id}/accept/` | Aceita um pedido de amizade. |
-| POST | `/account/friends/{friendship_id}/reject/` | Rejeita um pedido de amizade. |
+### Multiplayer API — Endpoints
+
+| Método HTTP | Endpoint | View | Descrição |
+|---|---|---|---|
+| POST | `/api/multiplayer/rooms/` | `CreateRoomView` | Cria uma nova sala multiplayer. |
+| POST | `/api/multiplayer/rooms/join/` | `JoinRoomView` | Permite ao jogador entrar numa sala existente. |
+| POST | `/api/multiplayer/rooms/ready/` | `PlayerReadyView` | Regista que o jogador está pronto para iniciar a partida. |
+| POST | `/api/multiplayer/rooms/leave/` | `LeaveRoomView` | Permite ao jogador sair de uma sala. |
+| POST | `/api/multiplayer/rooms/invitations/` | `SendRoomInvitationView` | Envia um convite para outro jogador entrar numa sala. |
+| GET | `/api/multiplayer/invitations/` | `RoomInvitationListView` | Lista os convites recebidos pelo jogador. |
+| POST | `/api/multiplayer/invitations/{invitation_id}/{action}/` | `RespondRoomInvitationView` | Aceita ou rejeita um convite recebido. |
+| POST | `/api/multiplayer/rooms/start/` | `StartMatchView` | Inicia uma partida multiplayer. |
+| GET | `/api/multiplayer/rooms/{room_code}/` | `RoomLobbyView` | Retorna os detalhes e o estado atual da sala. |
+| GET | `/api/multiplayer/rooms/{room_code}/match/` | `RoomMatchDetailView` | Retorna os detalhes da partida associada à sala. |
+| POST | `/api/multiplayer/rounds/{round_id}/guess/` | `SubmitMultiplayerGuessView` | Submete a localização escolhida pelo jogador numa ronda. |
+| POST | `/api/multiplayer/rounds/{round_id}/timeout/` | `TimeoutMultiplayerRoundView` | Regista o término do tempo disponível numa ronda. |
+| POST | `/api/multiplayer/matches/{match_id}/advance/` | `AdvanceMultiplayerRoundView` | Avança a partida para a próxima ronda. |
+| GET | `/api/multiplayer/matches/{match_id}/results/` | `MatchResultsView` | Retorna os resultados finais da partida multiplayer. |
 
 
 ## Game API
@@ -73,14 +59,19 @@ Base URL: `/api/games/`
 
 Todas as rotas requerem autenticação JWT (`Bearer Token`).
 
-| Método | Endpoint | Descrição |
-|:---:|---|---|
-| POST | `/start/` | Inicia uma nova partida e cria a primeira ronda. |
-| GET | `/resume/` | Retoma a partida em andamento do utilizador autenticado. |
-| GET | `/history/` | Lista as partidas concluídas ou abandonadas do utilizador. |
-| POST | `/rounds/{round_id}/answer/` | Submete a localização escolhida pelo jogador e calcula a distância e pontuação. |
-| POST | `/{session_id}/complete/` | Conclui uma partida depois de todas as rondas serem respondidas. |
-| POST | `/{session_id}/abandon/` | Abandona uma partida em andamento. |
+| Método HTTP | Endpoint | View | Descrição |
+|---|---|---|---|
+| POST | `/api/games/start/` | `StartGameView` | Inicia uma nova sessão de jogo para o utilizador autenticado. |
+| GET | `/api/games/resume/` | `ResumeGameView` | Recupera a sessão de jogo em andamento, permitindo ao jogador continuar. |
+| GET | `/api/games/history/` | `GameHistoryView` | Retorna o histórico de sessões de jogo do utilizador. |
+| GET | `/api/games/leaderboard/` | `LeaderboardView` | Retorna a classificação global dos jogadores. |
+| POST | `/api/games/rounds/{round_id}/answer/` | `SubmitAnswerView` | Submete a resposta do jogador para uma ronda específica. |
+| POST | `/api/games/rounds/{round_id}/timeout/` | `TimeoutRoundView` | Regista o término do tempo disponível para responder a uma ronda. |
+| POST | `/api/games/{session_id}/next/` | `NextRoundView` | Avança a sessão para a próxima ronda. |
+| GET | `/api/games/{session_id}/status/` | `GameStatusView` | Consulta o estado atual de uma sessão de jogo. |
+| POST | `/api/games/{session_id}/complete/` | `CompleteGameView` | Finaliza uma sessão de jogo. |
+| POST | `/api/games/{session_id}/abandon/` | `AbandonGameView` | Permite ao jogador abandonar uma sessão em andamento. |
+| GET | `/api/games/stats/` | `PlayerStatsView` | Retorna as estatísticas individuais do jogador. |
 
 
 ## Quiz API

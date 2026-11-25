@@ -196,7 +196,7 @@ DEFAULT_FROM_EMAIL = os.getenv(
 ROUNDS_PER_GAME = 5
 
 # time to play by rounds
-ROUND_TIME_SECONDS = 30
+ROUND_TIME_SECONDS = 60
 ROUND_TIME_GRACE_SECONDS = 3
 
 # Default primary key field type
