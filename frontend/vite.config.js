@@ -10,7 +10,6 @@ export default defineConfig({
     host: true,
     port: 5173,
     allowedHosts: true,
-    hmr: { protocol: 'wss', clientPort: 443 },  // HMR através do Nginx em HTTPS
   },
   resolve: {
     alias: {

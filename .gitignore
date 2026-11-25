@@ -3,4 +3,6 @@ geoguess_venv
 geogues_web
 /gg
 BACKEND.md
-.github
+.github/*
+!.github/
+
