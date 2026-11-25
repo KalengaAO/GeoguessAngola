@@ -1,4 +1,8 @@
 
+from math import ceil
+
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import serializers
 from .models import (
     GameRoom,
@@ -152,6 +156,9 @@ class MultiplayerRoundSerializer(serializers.ModelSerializer):
 
 
 class MultiplayerMatchDetailSerializer(serializers.ModelSerializer):
+    duration_seconds = serializers.SerializerMethodField()
+    seconds_remaining = serializers.SerializerMethodField()
+    total_rounds = serializers.SerializerMethodField()
     room_code = serializers.CharField(
         source="room.code",
         read_only=True,
@@ -172,6 +179,9 @@ class MultiplayerMatchDetailSerializer(serializers.ModelSerializer):
             "status",
             "started_at",
             "finished_at",
+            "duration_seconds",
+            "seconds_remaining",
+            "total_rounds",
             "participants",
             "rounds",
         ]
@@ -185,6 +195,30 @@ class MultiplayerMatchDetailSerializer(serializers.ModelSerializer):
             many=True,
             context=self.context,
         ).data
+
+    def get_duration_seconds(self, obj):
+        return settings.ROUND_TIME_SECONDS
+
+    def get_seconds_remaining(self, obj):
+        if obj.status != MultiplayerMatch.Status.IN_PROGRESS:
+            return 0
+
+        active_round = obj.rounds.filter(
+            status=MultiplayerRound.Status.ACTIVE
+        ).order_by("-round_number").first()
+        if active_round is None:
+            return 0
+
+        elapsed = (
+            timezone.now() - active_round.started_at
+        ).total_seconds()
+        return max(
+            0,
+            ceil(settings.ROUND_TIME_SECONDS - elapsed),
+        )
+
+    def get_total_rounds(self, obj):
+        return settings.ROUNDS_PER_GAME
 
 class MultiplayerGuessSerializer(serializers.Serializer):
     guessed_latitude = serializers.DecimalField(

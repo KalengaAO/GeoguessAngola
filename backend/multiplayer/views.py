@@ -358,6 +358,12 @@ class SubmitMultiplayerGuessView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if guess is None:
+            return Response(
+                {"detail": "O tempo para responder terminou. O palpite não foi contabilizado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         response_serializer = MultiplayerGuessResponseSerializer(guess)
 
         return Response(
