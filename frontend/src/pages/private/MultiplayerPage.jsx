@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
     Check,
+    Clock3,
     Flag,
     LoaderCircle,
+    LogOut,
     MapPin,
     Trophy,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
     CircleMarker,
@@ -25,11 +27,18 @@ import {
     advanceMultiplayerRound,
     getMultiplayerMatch,
     getMultiplayerResults,
+    leaveMultiplayerRoom,
     submitMultiplayerGuess,
 } from "../../services/multiplayerService";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import "leaflet/dist/leaflet.css";
 import "./MultiplayerPage.css";
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
 
 function GuessMapClick({ onSelect, disabled }) {
     useMapEvents({
@@ -45,10 +54,13 @@ function GuessMapClick({ onSelect, disabled }) {
 }
 
 function ActiveRound({ roomCode, match, round, isHost, onRefresh }) {
+    const navigate = useNavigate();
+    const matchExpired = match.seconds_remaining <= 0;
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [guessResult, setGuessResult] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isAdvancing, setIsAdvancing] = useState(false);
+    const [isLeaving, setIsLeaving] = useState(false);
 
     async function handleSubmitGuess() {
         if (!round || !selectedLocation || isSubmitting) return;
@@ -79,13 +91,47 @@ function ActiveRound({ roomCode, match, round, isHost, onRefresh }) {
         }
     }
 
+    async function handleLeave() {
+        if (isLeaving || isSubmitting || isAdvancing) return;
+        setIsLeaving(true);
+        try {
+            await leaveMultiplayerRoom(roomCode);
+            toast.success("Saíste da partida.");
+            navigate("/games", { replace: true });
+        } catch (error) {
+            toast.error(getApiErrorMessage(error, "Não foi possível sair da partida."));
+        } finally {
+            setIsLeaving(false);
+        }
+    }
+
     return (
         <main className="multiplayer-page">
             <header className="multiplayer-page__topbar">
                 <BrandLogo to="/games" className="multiplayer-page__brand" compact />
                 <div className="multiplayer-page__round-meta">
                     <Badge variant="outline">Sala {roomCode}</Badge>
-                    <Badge variant="gold">Ronda {round.round_number} / 5</Badge>
+                    <Badge variant="gold">Ronda {round.round_number}</Badge>
+                    <span
+                        className={`multiplayer-page__timer${round.status === "active" && match.seconds_remaining <= 10 ? " is-urgent" : ""}`}
+                        role="timer"
+                            aria-label={`Tempo restante da ronda: ${formatTime(match.seconds_remaining)}`}
+                    >
+                        <Clock3 size={15} aria-hidden="true" />
+                        {formatTime(match.seconds_remaining)}
+                    </span>
+                    <Button
+                        variant="outline"
+                        onClick={handleLeave}
+                        disabled={isLeaving || isSubmitting || isAdvancing}
+                    >
+                        {isLeaving ? (
+                            <LoaderCircle className="animate-spin" size={16} />
+                        ) : (
+                            <LogOut size={16} />
+                        )}
+                        {isLeaving ? "A sair..." : "Sair da partida"}
+                    </Button>
                 </div>
             </header>
 
@@ -117,7 +163,12 @@ function ActiveRound({ roomCode, match, round, isHost, onRefresh }) {
                             />
                             <GuessMapClick
                                 onSelect={setSelectedLocation}
-                                disabled={Boolean(guessResult) || isSubmitting || round.status !== "active"}
+                                disabled={
+                                    Boolean(guessResult) ||
+                                    isSubmitting ||
+                                    matchExpired ||
+                                    round.status !== "active"
+                                }
                             />
                             {selectedLocation && (
                                 <CircleMarker
@@ -131,20 +182,31 @@ function ActiveRound({ roomCode, match, round, isHost, onRefresh }) {
                         </MapContainer>
                     </div>
                     {selectedLocation && !guessResult && (
-                        <Button onClick={handleSubmitGuess} disabled={isSubmitting || round.status !== "active"}>
+                        <Button
+                            onClick={handleSubmitGuess}
+                            disabled={
+                                isSubmitting ||
+                                matchExpired ||
+                                round.status !== "active"
+                            }
+                        >
                             {isSubmitting ? <LoaderCircle className="animate-spin" /> : <MapPin />}
-                            Confirmar palpite
+                            {matchExpired ? "A terminar partida..." : "Confirmar palpite"}
                         </Button>
                     )}
                     {round.status === "completed" && isHost && (
                         <Button onClick={handleAdvance} disabled={isAdvancing}>
                             {isAdvancing ? <LoaderCircle className="animate-spin" /> : <Flag />}
-                            {round.round_number >= 5 ? "Concluir partida" : "Próxima ronda"}
+                            {round.round_number >= match.total_rounds
+                                ? "Ver resultados"
+                                : "Próxima ronda"}
                         </Button>
                     )}
                     {round.status === "active" && !guessResult && (
                         <p className="multiplayer-page__waiting">
-                            A partida avança quando todos os jogadores submeterem.
+                            {matchExpired
+                                ? "Tempo esgotado. A calcular resultados..."
+                                : "A partida avança quando todos os jogadores submeterem."}
                             {isSubmitting ? <LoaderCircle className="animate-spin" size={15} /> : null}
                         </p>
                     )}
@@ -160,6 +222,8 @@ function ActiveRound({ roomCode, match, round, isHost, onRefresh }) {
 function MultiplayerPage() {
     const { roomCode } = useParams();
     const { user } = useAuth();
+    const [clockNow, setClockNow] = useState(() => Date.now());
+    const expiryRefreshRef = useRef(null);
     const matchQuery = useQuery({
         queryKey: ["multiplayer", "match", roomCode],
         queryFn: ({ signal }) => getMultiplayerMatch(roomCode, { signal }),
@@ -167,11 +231,56 @@ function MultiplayerPage() {
             query.state.data?.status === "in_progress" ? 3000 : false,
         retry: false,
     });
+    const { refetch: refetchMatch } = matchQuery;
     const match = matchQuery.data;
     const rounds = match?.rounds ?? [];
     const round = rounds[rounds.length - 1];
     const isHost = match?.host_username === user?.username;
     const isCompleted = match?.status === "completed";
+    const elapsedSinceMatchRefresh = Math.max(
+        0,
+        Math.floor((clockNow - matchQuery.dataUpdatedAt) / 1000)
+    );
+    const roundSecondsLeft =
+        match?.status === "in_progress" &&
+        Number.isFinite(match.seconds_remaining)
+            ? Math.max(
+                  0,
+                  match.seconds_remaining - elapsedSinceMatchRefresh
+              )
+            : null;
+
+    useEffect(() => {
+        if (match?.status !== "in_progress") return undefined;
+
+        const intervalId = window.setInterval(
+            () => setClockNow(Date.now()),
+            1000
+        );
+        return () => window.clearInterval(intervalId);
+    }, [match?.id, match?.status]);
+
+    useEffect(() => {
+        if (
+            match?.status !== "in_progress" ||
+            round?.status !== "active" ||
+            roundSecondsLeft !== 0 ||
+            expiryRefreshRef.current === `${match.id}:${round.id}`
+        ) {
+            return;
+        }
+
+        expiryRefreshRef.current = `${match.id}:${round.id}`;
+        refetchMatch();
+    }, [
+        match?.id,
+        match?.status,
+        round?.id,
+        round?.status,
+        roundSecondsLeft,
+        refetchMatch,
+    ]);
+
     const resultsQuery = useQuery({
         queryKey: ["multiplayer", "results", match?.id],
         queryFn: ({ signal }) => getMultiplayerResults(match.id, { signal }),
@@ -237,7 +346,11 @@ function MultiplayerPage() {
         <ActiveRound
             key={round.id}
             roomCode={roomCode}
-            match={match}
+            match={{
+                ...match,
+                seconds_remaining:
+                    roundSecondsLeft ?? match.seconds_remaining,
+            }}
             round={round}
             isHost={isHost}
             onRefresh={matchQuery.refetch}

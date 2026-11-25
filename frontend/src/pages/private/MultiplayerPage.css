@@ -11,6 +11,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
     max-width: 1500px;
     margin: 0 auto 1.7rem;
     padding-bottom: 1rem;
@@ -19,7 +20,31 @@
 
 .multiplayer-page__round-meta {
     display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
+}
+
+.multiplayer-page__timer {
+    display: inline-flex;
+    min-width: 5.6rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.65rem;
+    color: var(--color-gold);
+    background: rgba(255, 198, 41, 0.08);
+    border: 1px solid rgba(255, 198, 41, 0.25);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+}
+
+.multiplayer-page__timer.is-urgent {
+    color: #ff9a9a;
+    background: rgba(180, 35, 50, 0.13);
+    border-color: rgba(248, 113, 113, 0.4);
 }
 
 .multiplayer-page__layout {
@@ -152,6 +177,11 @@
 }
 
 @media (max-width: 900px) {
+    .multiplayer-page__topbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
     .multiplayer-page__layout {
         grid-template-columns: 1fr;
     }
