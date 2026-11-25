@@ -32,7 +32,7 @@ function GlitterWrap() {
             canvas.height = Math.round(height * pixelRatio);
             context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
-            const particleCount = width < 600 ? 32 : 64;
+            const particleCount = width < 600 ? 60 : 120;
             const maxRadius = Math.hypot(width, height) * 0.62;
             particles = Array.from({ length: particleCount }, () => ({
                 angle: Math.random() * Math.PI * 2,
@@ -91,7 +91,7 @@ function GlitterWrap() {
                 context.arc(x, y, particle.size, 0, Math.PI * 2);
                 context.fill();
 
-                if (Math.sin(frame * 0.06 + particle.sparkleOffset) > 0.99) {
+                if (Math.sin(frame * 0.06 + particle.sparkleOffset) > 0.90) {
                     const sparkleSize = particle.size * 2.5;
                     context.globalAlpha = opacity * 0.65;
                     context.lineWidth = 0.65;
