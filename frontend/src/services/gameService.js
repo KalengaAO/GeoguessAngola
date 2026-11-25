@@ -7,6 +7,13 @@ export async function startGame() {
     return data;
 }
 
+export async function abandonGame(sessionId) {
+    const { data } = await api.post(
+        `${GAME_BASE}/${sessionId}/abandon/`
+    );
+    return data;
+}
+
 export async function submitGameAnswer(roundId, location) {
     const { data } = await api.post(`${GAME_BASE}/rounds/${roundId}/answer/`, {
         latitude: location.latitude,
