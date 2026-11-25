@@ -29,6 +29,45 @@
     font-size: 14px;
 }
 
+.game-page__header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.game-page__abandon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.8rem;
+    color: rgba(255, 255, 255, 0.86);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0.55rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.game-page__abandon-button:hover:not(:disabled) {
+    color: #ffb0b0;
+    border-color: rgba(248, 113, 113, 0.65);
+}
+
+.game-page__abandon-button:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+}
+
+.game-page__abandon-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .game-page__timer-display {
     display: inline-flex;
     min-width: 76px;
@@ -443,6 +482,10 @@
 
     .game-page__round-info {
         gap: 14px;
+    }
+
+    .game-page__header-actions {
+        justify-content: flex-start;
     }
 
     .game-page__section-heading h1,

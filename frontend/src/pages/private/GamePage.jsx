@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
     CircleMarker,
     MapContainer,
@@ -9,8 +8,13 @@ import {
     useMap,
     useMapEvents,
 } from "react-leaflet";
+import { LogOut } from "lucide-react";
+import { toast } from "sonner";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import BrandLogo from "../../components/BrandLogo/BrandLogo";
 import useGameSession from "../../hooks/useGameSession";
+import { abandonGame } from "../../services/gameService";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 import "leaflet/dist/leaflet.css";
 import "./GamePage.css";
 
@@ -54,6 +58,8 @@ function formatTime(seconds) {
 
 function GamePage() {
     const { sessionId } = useParams();
+    const navigate = useNavigate();
+    const [isAbandoning, setIsAbandoning] = useState(false);
     const {
         round,
         rounds,
@@ -74,6 +80,31 @@ function GamePage() {
         submitGuess,
         goToNextRound,
     } = useGameSession(sessionId);
+
+    async function handleAbandon() {
+        if (
+            isAbandoning ||
+            !window.confirm("Queres mesmo abandonar esta partida?")
+        ) {
+            return;
+        }
+
+        setIsAbandoning(true);
+        try {
+            await abandonGame(sessionId);
+            toast.success("Partida abandonada.");
+            navigate("/games", { replace: true });
+        } catch (error) {
+            toast.error(
+                getApiErrorMessage(
+                    error,
+                    "Não foi possível abandonar a partida."
+                )
+            );
+        } finally {
+            setIsAbandoning(false);
+        }
+    }
 
     if (isLoading) {
         return (
@@ -150,18 +181,29 @@ function GamePage() {
         <main className="game-page">
             <header className="game-page__header">
                 <BrandLogo to="/games" className="game-page__brand" compact />
-                <div className="game-page__round-info">
-                    <span>Ronda {round.number} de {totalRounds}</span>
-                    <span className="game-page__score">
-                        {totalScore.toLocaleString("pt-PT")} pts
-                    </span>
-                    <span
-                        className={`game-page__timer-display${isTimerUrgent ? " is-urgent" : ""}${isTimerExpired ? " is-expired" : ""}`}
-                        role="timer"
-                        aria-label={`Tempo restante: ${secondsLeft} segundos`}
+                <div className="game-page__header-actions">
+                    <button
+                        type="button"
+                        className="game-page__abandon-button"
+                        onClick={handleAbandon}
+                        disabled={isAbandoning || isSubmitting || isAdvancing}
                     >
-                        {formatTime(secondsLeft)}
-                    </span>
+                        <LogOut size={16} aria-hidden="true" />
+                        {isAbandoning ? "A abandonar..." : "Abandonar partida"}
+                    </button>
+                    <div className="game-page__round-info">
+                        <span>Ronda {round.number} de {totalRounds}</span>
+                        <span className="game-page__score">
+                            {totalScore.toLocaleString("pt-PT")} pts
+                        </span>
+                        <span
+                            className={`game-page__timer-display${isTimerUrgent ? " is-urgent" : ""}${isTimerExpired ? " is-expired" : ""}`}
+                            role="timer"
+                            aria-label={`Tempo restante: ${secondsLeft} segundos`}
+                        >
+                            {formatTime(secondsLeft)}
+                        </span>
+                    </div>
                 </div>
             </header>
 
