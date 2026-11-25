@@ -1,0 +1,92 @@
+[
+    {
+        "model": "game.locationimage",
+        "pk": 1,
+        "fields": {
+            "image": "locations/calandula.jpeg",
+            "is_active": true,
+            "location": 6,
+            "created_at": "2026-11-24T15:01:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 2,
+        "fields": {
+            "image": "locations/Cristo_Rei.jpeg",
+            "is_active": true,
+            "location": 2,
+            "created_at": "2026-11-24T15:02:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 3,
+        "fields": {
+            "image": "locations/Deserto_de_Moçâmedes.jpeg",
+            "is_active": true,
+            "location": 3,
+            "created_at": "2026-11-24T15:03:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 4,
+        "fields": {
+            "image": "locations/fenda_da_tundavala.png",
+            "is_active": true,
+            "location": 5,
+            "created_at": "2026-11-24T15:04:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 5,
+        "fields": {
+            "image": "locations/Fortaleza_de_São_Miguel.jpeg",
+            "is_active": true,
+            "location": 4,
+            "created_at": "2026-11-24T15:05:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 6,
+        "fields": {
+            "image": "locations/Miradouro_da_Lua.jpeg",
+            "is_active": true,
+            "location": 7,
+            "created_at": "2026-11-24T15:06:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 7,
+        "fields": {
+            "image": "locations/Morro_do_Moco.jpeg",
+            "is_active": true,
+            "location": 8,
+            "created_at": "2026-11-24T15:07:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 8,
+        "fields": {
+            "image": "locations/Pedras_Negras_de_Pungo_Andongo.jpeg",
+            "is_active": true,
+            "location": 9,
+            "created_at": "2026-11-24T15:08:00+01:00"
+        }
+    },
+    {
+        "model": "game.locationimage",
+        "pk": 9,
+        "fields": {
+            "image": "locations/Serra_da_Leba.jpeg",
+            "is_active": true,
+            "location": 10,
+            "created_at": "2026-11-24T15:09:00+01:00"
+        }
+    }
+]

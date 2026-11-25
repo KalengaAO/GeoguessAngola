@@ -1,0 +1,122 @@
+[
+    {
+        "model": "game.geolocation",
+        "pk": 1,
+        "fields": {
+            "name": "Baía azul",
+            "province": "Benguela",
+            "latitude": "-12.628300",
+            "longitude": "13.237200",
+            "is_active": true,
+            "created_at": "2026-11-20T15:11:24.000049+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 2,
+        "fields": {
+            "name": "Cristo Rei",
+            "province": "Huíla Lubango",
+            "latitude": "-14.940000",
+            "longitude": "13.511900",
+            "is_active": true,
+            "created_at": "2026-11-20T15:17:06.312772+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 3,
+        "fields": {
+            "name": "Deserto de Moçâmedes",
+            "province": "Namibe",
+            "latitude": "15.143890",
+            "longitude": "12.296940",
+            "is_active": true,
+            "created_at": "2026-11-20T15:17:50.455325+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 4,
+        "fields": {
+            "name": "Fortaleza de São Miguel",
+            "province": "Luanda",
+            "latitude": "-8.807760",
+            "longitude": "13.223200",
+            "is_active": true,
+            "created_at": "2026-11-20T15:18:34.394088+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 5,
+        "fields": {
+            "name": "Fenda da Tundavala",
+            "province": "Huíla",
+            "latitude": "-14.818120",
+            "longitude": "13.383390",
+            "is_active": true,
+            "created_at": "2026-11-20T15:19:45.700764+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 6,
+        "fields": {
+            "name": "Quedas de Calandula",
+            "province": "Malanje",
+            "latitude": "-9.074100",
+            "longitude": "16.000300",
+            "is_active": true,
+            "created_at": "2026-11-20T15:20:18.049588+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 7,
+        "fields": {
+            "name": "Miradouro da Lua",
+            "province": "Luanda",
+            "latitude": "-9.221200",
+            "longitude": "13.089800",
+            "is_active": true,
+            "created_at": "2026-11-20T15:21:03.987911+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 8,
+        "fields": {
+            "name": "Morro do Moco",
+            "province": "Huambo",
+            "latitude": "-12.462870",
+            "longitude": "15.173560",
+            "is_active": true,
+            "created_at": "2026-11-20T15:21:32.106262+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 9,
+        "fields": {
+            "name": "Pedras Negras de Pungo Andongo",
+            "province": "Malanje",
+            "latitude": "-9.674870",
+            "longitude": "15.630760",
+            "is_active": true,
+            "created_at": "2026-11-20T15:21:58.440009+01:00"
+        }
+    },
+    {
+        "model": "game.geolocation",
+        "pk": 10,
+        "fields": {
+            "name": "Serra da Leba",
+            "province": "Namibe",
+            "latitude": "-15.071080",
+            "longitude": "13.248640",
+            "is_active": true,
+            "created_at": "2026-11-20T15:22:29.101712+01:00"
+        }
+    }
+]
