@@ -1,0 +1,236 @@
+.invite-notifications {
+    position: relative;
+}
+
+.invite-notifications__trigger,
+.friends-manager__trigger {
+    position: relative;
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.invite-notifications__trigger:hover,
+.friends-manager__trigger:hover {
+    color: var(--color-white);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--border);
+}
+
+.invite-notifications__trigger:focus-visible,
+.friends-manager__trigger:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+}
+
+.invite-notifications__trigger > svg,
+.friends-manager__trigger > svg {
+    color: var(--color-gold);
+}
+
+.invite-notifications__badge {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.2rem;
+    display: grid;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    place-items: center;
+    padding: 0 0.2rem;
+    color: #fff;
+    background: #d83a4e;
+    border: 2px solid var(--background-main);
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+.friends-invites-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: min(660px, calc(100vw - 2rem));
+    max-height: min(82dvh, 720px);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    color: var(--color-white);
+    background: #16090b;
+    border: 1px solid rgba(255, 198, 41, 0.25);
+    border-radius: 1rem;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    transform: translate(-50%, -50%);
+}
+
+.friends-invites-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(5px);
+}
+
+.friends-invites-dialog__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.4rem 1.5rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.friends-invites-dialog__header .app-page__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.friends-invites-dialog__header h2 {
+    margin: 0.2rem 0 0.35rem;
+    color: var(--color-white);
+    font-size: 1.25rem;
+}
+
+.friends-invites-dialog__header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.friends-invites-dialog__close {
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 auto;
+    place-items: center;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    cursor: pointer;
+}
+
+.friends-invites-dialog__close:hover {
+    color: var(--color-white);
+    border-color: var(--color-gold);
+}
+
+.friends-invites-dialog__close:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+}
+
+.friends-invites-dialog__content {
+    display: grid;
+    max-height: calc(min(82dvh, 720px) - 5.5rem);
+    gap: 1rem;
+    padding: 1.2rem 1.5rem 1.5rem;
+    overflow-y: auto;
+}
+
+.friends-invites-dialog__section {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.friends-invites-dialog__section h3 {
+    margin: 0;
+    color: var(--color-gold);
+    font-size: 0.95rem;
+}
+
+.friends-invites-dialog__section label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.friends-invites-dialog__section input {
+    width: 100%;
+    padding: 0.7rem 0.85rem;
+    color: var(--color-white);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 0.55rem;
+}
+
+.friends-manager__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.friends-manager__search > svg {
+    position: absolute;
+    left: 0.8rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.friends-manager__search input {
+    padding-left: 2.5rem;
+}
+
+.friends-invites-dialog__section input:focus {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.friends-invites-dialog__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 0;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.85rem;
+}
+
+.friends-invites-dialog__row > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.friends-invites-dialog__row strong {
+    color: var(--color-white);
+}
+
+.friends-invites-dialog__error {
+    margin: 0;
+    color: #ff9a9a;
+    font-size: 0.82rem;
+}
+
+@media (max-width: 560px) {
+    .invite-notifications__trigger,
+    .friends-manager__trigger {
+        width: 42px;
+        min-width: 42px;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .invite-notifications__trigger > span:not(.invite-notifications__badge),
+    .friends-manager__trigger > span:not(.invite-notifications__badge) {
+        display: none;
+    }
+
+    .friends-invites-dialog__header,
+    .friends-invites-dialog__content {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .friends-invites-dialog__row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
