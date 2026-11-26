@@ -116,6 +116,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
     gap: 1rem;
 
     max-width: 1440px;
@@ -124,6 +125,29 @@
 
     color: rgba(255, 255, 255, 0.45);
     font-size: 0.8rem;
+}
+
+.footer__legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1rem;
+}
+
+.footer__legal-links a {
+    color: rgba(255, 255, 255, 0.65);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.footer__legal-links a:hover {
+    color: var(--color-gold);
+}
+
+.footer__legal-links a:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+    border-radius: 2px;
 }
 
 /* Responsive */

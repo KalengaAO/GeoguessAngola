@@ -53,50 +53,48 @@ function Footer() {
     return (
         <footer className="footer">
 
-            <div className="footer__main">
-                {!isAuthenticated && (
-                    <>
-                        <div className="footer__identity">
-                            <Link
-                                to="/"
-                                className="footer__brand"
-                                aria-label="GeoGuess Angola"
-                            >
-                                <img
-                                    src="/images/logo/logo-stacked-color-dark.svg"
-                                    alt=""
-                                />
-                            </Link>
+            {!isAuthenticated && (
+                <div className="footer__main">
+                    <div className="footer__identity">
+                        <Link
+                            to="/"
+                            className="footer__brand"
+                            aria-label="GeoGuess Angola"
+                        >
+                            <img
+                                src="/images/logo/logo-stacked-color-dark.svg"
+                                alt=""
+                            />
+                        </Link>
 
-                            <p>
-                                Descobre Angola, explora as suas paisagens
-                                e testa os teus conhecimentos geográficos.
-                            </p>
-                        </div>
+                        <p>
+                            Descobre Angola, explora as suas paisagens
+                            e testa os teus conhecimentos geográficos.
+                        </p>
+                    </div>
 
-                        <div className="footer__about">
-                            <h3>Sobre</h3>
+                    <div className="footer__about">
+                        <h3>Sobre</h3>
 
-                            <p>
-                                O nosso projeto consiste no desenvolvimento
-                                de uma plataforma interativa que combina
-                                exploração geográfica e conhecimento cultural,
-                                inspirada no conceito do GeoGuessr, mas com
-                                um foco especial em Angola.
-                            </p>
-                        </div>
+                        <p>
+                            O nosso projeto consiste no desenvolvimento
+                            de uma plataforma interativa que combina
+                            exploração geográfica e conhecimento cultural,
+                            inspirada no conceito do GeoGuessr, mas com
+                            um foco especial em Angola.
+                        </p>
+                    </div>
 
-                        <div className="footer__about">
-                            <h3>O projeto</h3>
+                    <div className="footer__about">
+                        <h3>O projeto</h3>
 
-                            <p>
-                                Uma experiência de exploração,
-                                aprendizagem e descoberta de Angola.
-                            </p>
-                        </div>
-                    </>
-                )}
-            </div>
+                        <p>
+                            Uma experiência de exploração,
+                            aprendizagem e descoberta de Angola.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <div className="footer__culture">
                 <div className="footer__culture-track">
@@ -123,6 +121,18 @@ function Footer() {
                     © {new Date().getFullYear()} GeoGuess Angola.
                     Todos os direitos reservados.
                 </p>
+
+                <nav
+                    className="footer__legal-links"
+                    aria-label="Informação legal"
+                >
+                    <Link to="/privacy-policy">
+                        Política de Privacidade
+                    </Link>
+                    <Link to="/terms-of-service">
+                        Termos de Serviço
+                    </Link>
+                </nav>
 
                 <span>Feito com identidade angolana.</span>
             </div>
