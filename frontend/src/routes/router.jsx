@@ -2,6 +2,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import HomePage from "../pages/public/HomePage";
+import LegalPage from "../pages/public/LegalPage";
 import NotFoundPage from "../pages/public/NotFoundPage";
 
 import AuthenticatedLayout from "../components/AuthenticatedLayout/AuthenticatedLayout";
@@ -47,6 +48,15 @@ function Router() {
                 }
             />
 
+            <Route
+                path="/privacy-policy"
+                element={<LegalPage documentType="privacy" />}
+            />
+            <Route
+                path="/terms-of-service"
+                element={<LegalPage documentType="terms" />}
+            />
+
             {/* Private routes */}
             <Route element={<PrivateRoute />}>
                 <Route element={<AuthenticatedLayout />}>
@@ -58,14 +68,13 @@ function Router() {
                     <Route path="/leaderboard" element={<LeaderboardPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/game/:sessionId" element={<GamePage />} />
+                    <Route path="/quiz/:sessionId" element={<QuizPage />} />
+                    <Route
+                        path="/multiplayer/:roomCode"
+                        element={<MultiplayerPage />}
+                    />
                 </Route>
-
-                <Route path="/game/:sessionId" element={<GamePage />} />
-                <Route path="/quiz/:sessionId" element={<QuizPage />} />
-                <Route
-                    path="/multiplayer/:roomCode"
-                    element={<MultiplayerPage />}
-                />
             </Route>
 
             {/* Fallback */}
