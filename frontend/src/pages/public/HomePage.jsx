@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Header from "../../components/Header/Header";
+import Home from "../../components/Home/Home";
 import LoginForm from "../../components/Auth/LoginForm/LoginForm";
 import RegisterForm from "../../components/Auth/RegisterForm/RegisterForm";
 import "./HomePage.css";
@@ -92,10 +92,11 @@ function HomePage() {
                 )}
             </section>
 
-            <Header
+            <Home
                 activeAuthPanel={activePanel}
                 onToggleAuth={toggleAuthPanel}
             />
+          
         </main>
     );
 }
