@@ -80,6 +80,13 @@ class SubmitAnswerView(APIView):
                 "latitude": game_round.guessed_latitude,
                 "longitude": game_round.guessed_longitude,
             }
+            location = game_round.image.location
+            correct_location.update(
+                {
+                    "name": location.name,
+                    "province": location.province,
+                }
+            )
 
             return Response(
                 {
@@ -135,6 +142,8 @@ class TimeoutRoundView(APIView):
                 "correct_location": {
                     "latitude": float(game_round.image.location.latitude),
                     "longitude": float(game_round.image.location.longitude),
+                    "name": game_round.image.location.name,
+                    "province": game_round.image.location.province,
                 },
             },
             status=status.HTTP_200_OK,
@@ -416,6 +425,8 @@ class GameStatusView(APIView):
                         {
                             "latitude": float(location.latitude),
                             "longitude": float(location.longitude),
+                            "name": location.name,
+                            "province": location.province,
                         }
                         if is_answered
                         else None

@@ -343,6 +343,8 @@ class MultiplayerRoomApiTests(TestCase):
             multiplayer_round.status,
             MultiplayerRound.Status.COMPLETED,
         )
+        self.assertEqual(response.data["location_name"], "Luanda")
+        self.assertEqual(response.data["province"], "Luanda")
 
     def test_match_time_is_per_round_after_five_minutes(self):
         room = create_room(self.host)
@@ -368,6 +370,8 @@ class MultiplayerRoomApiTests(TestCase):
         self.assertEqual(response.data["status"], "in_progress")
         self.assertEqual(response.data["duration_seconds"], 30)
         self.assertEqual(response.data["total_rounds"], 5)
+        self.assertNotIn("location_name", response.data["rounds"][0])
+        self.assertNotIn("province", response.data["rounds"][0])
         self.assertGreaterEqual(response.data["seconds_remaining"], 19)
         self.assertLessEqual(response.data["seconds_remaining"], 20)
         match.refresh_from_db()
@@ -562,6 +566,8 @@ class MultiplayerRoomApiTests(TestCase):
         )
         self.assertEqual(host_response.status_code, 201)
         self.assertEqual(host_response.data["score"], 5000)
+        self.assertEqual(host_response.data["location_name"], "Location 5")
+        self.assertEqual(host_response.data["province"], "Luanda")
 
         player_client = APIClient()
         player_client.force_authenticate(player)
@@ -586,6 +592,14 @@ class MultiplayerRoomApiTests(TestCase):
         self.assertEqual(match_response.status_code, 200)
         self.assertEqual(match_response.data["status"], "completed")
         self.assertEqual(len(match_response.data["rounds"]), 5)
+        self.assertEqual(
+            match_response.data["rounds"][-1]["location_name"],
+            "Location 5",
+        )
+        self.assertEqual(
+            match_response.data["rounds"][-1]["province"],
+            "Luanda",
+        )
 
         results_response = self.client.get(
             f"/api/multiplayer/matches/{match.id}/results/"

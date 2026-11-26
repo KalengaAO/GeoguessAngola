@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from django.shortcuts import render
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from .models import MultiplayerRound
 from .services import (
         create_room, join_room, 
         set_player_ready, start_match,
@@ -328,9 +329,21 @@ class RoomMatchDetailView(APIView):
             match,
             context={"request": request},
         )
+        response_data = serializer.data
+        rounds = match.rounds.select_related(
+            "image__location"
+        ).order_by("round_number")
+        for round_data, multiplayer_round in zip(
+            response_data["rounds"],
+            rounds,
+        ):
+            if multiplayer_round.status == MultiplayerRound.Status.COMPLETED:
+                location = multiplayer_round.image.location
+                round_data["location_name"] = location.name
+                round_data["province"] = location.province
 
         return Response(
-            serializer.data,
+            response_data,
             status=status.HTTP_200_OK,
         )
 
@@ -365,9 +378,13 @@ class SubmitMultiplayerGuessView(APIView):
             )
 
         response_serializer = MultiplayerGuessResponseSerializer(guess)
+        response_data = dict(response_serializer.data)
+        location = guess.round.image.location
+        response_data["location_name"] = location.name
+        response_data["province"] = location.province
 
         return Response(
-            response_serializer.data,
+            response_data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -394,6 +411,8 @@ class TimeoutMultiplayerRoundView(APIView):
                 "status": multiplayer_round.status,
                 "timed_out": True,
                 "completed_at": multiplayer_round.completed_at,
+                "location_name": multiplayer_round.image.location.name,
+                "province": multiplayer_round.image.location.province,
             },
             status=status.HTTP_200_OK,
         )

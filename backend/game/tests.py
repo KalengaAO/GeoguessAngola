@@ -97,6 +97,14 @@ class GameApiTests(TestCase):
         )
         self.assertEqual(first_answer.status_code, 200)
         self.assertEqual(first_answer.data["score"], 5000)
+        self.assertEqual(
+            first_answer.data["correct_location"]["name"],
+            "Luanda",
+        )
+        self.assertEqual(
+            first_answer.data["correct_location"]["province"],
+            "Luanda",
+        )
 
         next_round_response = self.client.post(
             f"/api/game/{session.id}/next/"
@@ -145,6 +153,24 @@ class GameApiTests(TestCase):
             f"/api/game/{session.id}/status/"
         )
         self.assertEqual(other_response.status_code, 404)
+
+    def test_game_status_includes_place_name_and_province_after_answer(self):
+        session = GameSession.objects.create(user=self.user)
+        game_round = self.create_round(session, answered=True)
+
+        response = self.client.get(
+            f"/api/game/{session.id}/status/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data["rounds"][0]["correct_location"]["name"],
+            f"Location {session.id}",
+        )
+        self.assertEqual(
+            response.data["rounds"][0]["correct_location"]["province"],
+            "Luanda",
+        )
 
     def test_history_rejects_invalid_pagination(self):
         response = self.client.get("/api/game/history/?limit=abc")
@@ -219,7 +245,12 @@ class GameApiTests(TestCase):
         self.assertTrue(response.data["timed_out"])
         self.assertEqual(
             response.data["correct_location"],
-            {"latitude": -8.8, "longitude": 13.2},
+            {
+                "latitude": -8.8,
+                "longitude": 13.2,
+                "name": "Miradouro",
+                "province": "Luanda",
+            },
         )
         self.assertEqual(game_round.score, 0)
         self.assertIsNotNone(game_round.answered_at)
