@@ -4,8 +4,8 @@ import FriendsDialog from "./FriendsDialog";
 import InviteNotifications from "./InviteNotifications";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { ChevronDown, LogOut, Settings2, UserRound } from "lucide-react";
 import "./AuthenticatedLayout.css";
-import { ChevronDown } from "lucide-react";
 
 function AccountMenu({ user, onLogout, menuId }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -84,7 +84,7 @@ function AccountMenu({ user, onLogout, menuId }) {
                         className="app-shell__account-item"
                         onClick={closeMenu}
                     >
-                        <UserRound size={17} aria-hidden="true" />
+                        <UserRound   size={17} aria-hidden="true" />
                         Perfil
                     </NavLink>
                     <NavLink
