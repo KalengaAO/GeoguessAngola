@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, BookOpenCheck, Check, X } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import BrandLogo from "../../components/BrandLogo/BrandLogo";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
@@ -170,7 +169,6 @@ function QuizPage() {
                 <Button variant="ghost" onClick={handleQuit} disabled={isEnding}>
                     <ArrowLeft /> Sair do quiz
                 </Button>
-                <BrandLogo className="quiz-page__brand" compact />
                 <div className="quiz-page__topbar-stats">
                     <Badge variant="outline">{questionIndex + 1} / {questions.length}</Badge>
                     <Badge variant="gold">{score} acertos</Badge>

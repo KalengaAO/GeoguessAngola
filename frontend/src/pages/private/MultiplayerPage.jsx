@@ -22,7 +22,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import BrandLogo from "../../components/BrandLogo/BrandLogo";
 import {
     advanceMultiplayerRound,
     getMultiplayerMatch,
@@ -108,7 +107,6 @@ function ActiveRound({ roomCode, match, round, isHost, onRefresh }) {
     return (
         <main className="multiplayer-page">
             <header className="multiplayer-page__topbar">
-                <BrandLogo to="/games" className="multiplayer-page__brand" compact />
                 <div className="multiplayer-page__round-meta">
                     <Badge variant="outline">Sala {roomCode}</Badge>
                     <Badge variant="gold">Ronda {round.round_number}</Badge>
@@ -146,6 +144,21 @@ function ActiveRound({ roomCode, match, round, isHost, onRefresh }) {
                     {guessResult && (
                         <div className="multiplayer-page__feedback" role="status">
                             <Check size={17} /> Palpite registado: {guessResult.score} pontos
+                        </div>
+                    )}
+                    {(guessResult?.location_name ||
+                        (round.status === "completed" &&
+                            round.location_name)) && (
+                        <div className="multiplayer-page__location-reveal">
+                            <span>Esta imagem mostra</span>
+                            <strong>
+                                {guessResult?.location_name ||
+                                    round.location_name}
+                            </strong>
+                            <span>
+                                Província de{" "}
+                                {guessResult?.province || round.province}
+                            </span>
                         </div>
                     )}
                 </section>
@@ -309,7 +322,6 @@ function MultiplayerPage() {
         return (
             <main className="multiplayer-page">
                 <header className="multiplayer-page__topbar">
-                    <BrandLogo to="/games" className="multiplayer-page__brand" compact />
                     <Badge variant="gold"><Trophy size={13} /> RESULTADOS</Badge>
                 </header>
                 <Card className="multiplayer-page__results">

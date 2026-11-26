@@ -11,7 +11,6 @@ import {
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import BrandLogo from "../../components/BrandLogo/BrandLogo";
 import useGameSession from "../../hooks/useGameSession";
 import { abandonGame } from "../../services/gameService";
 import { getApiErrorMessage } from "../../utils/apiErrors";
@@ -136,10 +135,6 @@ function GamePage() {
     if (isFinished) {
         return (
             <main className="game-page">
-                <header className="game-page__header">
-                    <BrandLogo to="/games" className="game-page__brand" compact />
-                </header>
-
                 <section className="game-page__summary">
                     <p className="game-page__eyebrow">JORNADA CONCLUÍDA</p>
                     <h1>Partida concluída!</h1>
@@ -180,7 +175,6 @@ function GamePage() {
     return (
         <main className="game-page">
             <header className="game-page__header">
-                <BrandLogo to="/games" className="game-page__brand" compact />
                 <div className="game-page__header-actions">
                     <button
                         type="button"
@@ -348,6 +342,15 @@ function GamePage() {
                                     <strong>{roundResult.score} pontos</strong>
                                 </div>
                             </div>
+                            {correctLocation?.name && (
+                                <div className="game-page__location-reveal">
+                                    <span>Esta imagem mostra</span>
+                                    <strong>{correctLocation.name}</strong>
+                                    <span>
+                                        Província de {correctLocation.province}
+                                    </span>
+                                </div>
+                            )}
                             {correctLocation && (
                                 <div className="game-page__map-legend">
                                     <span><i className="guess-marker" /> O teu palpite</span>
