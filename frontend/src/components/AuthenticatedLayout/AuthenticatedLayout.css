@@ -148,6 +148,10 @@
     padding-top: 68px;
 }
 
+.app-shell__content--no-sidebar {
+    margin-left: 0;
+}
+
 .app-shell__topbar {
     position: fixed;
     inset: 0 0 auto;

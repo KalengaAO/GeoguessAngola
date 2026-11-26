@@ -4,7 +4,14 @@ import FriendsDialog from "./FriendsDialog";
 import InviteNotifications from "./InviteNotifications";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { ChevronDown, LogOut, Settings2, UserRound } from "lucide-react";
+import {
+    ChevronDown,
+    FileText,
+    LogOut,
+    Settings2,
+    ShieldCheck,
+    UserRound,
+} from "lucide-react";
 import "./AuthenticatedLayout.css";
 
 function AccountMenu({ user, onLogout, menuId }) {
@@ -94,6 +101,22 @@ function AccountMenu({ user, onLogout, menuId }) {
                     >
                         <Settings2 size={17} aria-hidden="true" />
                         Configurações
+                    </NavLink>
+                    <NavLink
+                        to="/privacy-policy"
+                        className="app-shell__account-item"
+                        onClick={closeMenu}
+                    >
+                        <ShieldCheck size={17} aria-hidden="true" />
+                        Política de Privacidade
+                    </NavLink>
+                    <NavLink
+                        to="/terms-of-service"
+                        className="app-shell__account-item"
+                        onClick={closeMenu}
+                    >
+                        <FileText size={17} aria-hidden="true" />
+                        Termos de Serviço
                     </NavLink>
                     <div className="app-shell__account-divider" />
                     <button
