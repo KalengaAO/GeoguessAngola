@@ -112,11 +112,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "geoguessangola",
-        "USER": "geoangola",
-        "PASSWORD": "759261348@",
-        "HOST": 'localhost',
-        "PORT": '5432',
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": read_secret('postgres_password'),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": os.getenv("POSTGRES_PORT"),
     }
 }
 
@@ -180,7 +180,7 @@ CSRF_COOKIE_SECURE = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "/app/staticfiles"
-MEDIA_URL = "/media/"
+MEDIA_URL = "/app/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 EMAIL_BACKEND = os.getenv(
