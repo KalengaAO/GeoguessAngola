@@ -41,7 +41,7 @@ def read_secret(secret_name):
 SECRET_KEY = 'django-insecure-*gy8i(k^tcm56=mo=*n&32w_v)zk@_s9lojygkptlz=ixm6zc='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
 # Application definition
@@ -114,9 +114,9 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("POSTGRES_DB"),
         "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": read_secret('postgres_password'),
-        "HOST": os.getenv("POSTGRES_HOST"),
-        "PORT": os.getenv("POSTGRES_PORT"),
+        "PASSWORD": read_secret("postgres_password"),
+        "HOST": os.getenv("POSTGRES_HOST", "postgres"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -172,16 +172,16 @@ REST_FRAMEWORK = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-ALLOWED_HOSTS = [f"{os.getenv('DOMAIN_NAME', 'localhost')}", "127.0.0.1", "backend",]
-CSRF_TRUSTED_ORIGINS = [f"http://localhost:3000", f"http://{os.getenv('DOMAIN_NAME', 'localhost')}", "http://127.0.0.1:3000"]
+ALLOWED_HOSTS = [f"{os.getenv('DOMAIN_NAME')}", "127.0.0.1", "backend",]
+CSRF_TRUSTED_ORIGINS = [f"https://{os.getenv('DOMAIN_NAME')}"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "/app/staticfiles"
-MEDIA_URL = "/app/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = "/app/media"
 
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
@@ -196,7 +196,7 @@ DEFAULT_FROM_EMAIL = os.getenv(
 ROUNDS_PER_GAME = 5
 
 # time to play by rounds
-ROUND_TIME_SECONDS = 30
+ROUND_TIME_SECONDS = 60
 ROUND_TIME_GRACE_SECONDS = 3
 
 # Default primary key field type
